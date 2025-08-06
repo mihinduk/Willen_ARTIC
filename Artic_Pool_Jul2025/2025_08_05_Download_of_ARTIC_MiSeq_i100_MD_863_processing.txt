@@ -1,0 +1,318 @@
+2025_08_05_Download_of_ARTIC_MiSeq_i100_MD_863_processing:
+/lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_863
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Wang_artic/Artic_Pool_Jul2025"
+
+Craig Willen
+
+1.  Follow link in email and log in to Globus:
+
+2.  Put HTCF@WUSTL in the search bar:
+
+3.  Put the path to your storage in the bar below HTCF@WUSTL:
+/lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_863
+
+4.  Select all in the collection panel and click "Transfer or Sync"
+
+5.  Download the Reports:
+head -n1 Demultiplex_Stats.csv > MiSeq_i100_MD_863_Demultiplex_Stats.csv
+grep Handley Demultiplex_Stats.csv >> MiSeq_i100_MD_863_Demultiplex_Stats.csv
+
+head -n1 fastq_list.csv > MiSeq_i100_MD_863_fastq_list.csv
+grep Handley fastq_list.csv >> MiSeq_i100_MD_863_fastq_list.csv
+
+head -n1 SampleSheet.csv > MiSeq_i100_MD_863_SampleSheet.csv
+grep Handley SampleSheet.csv >> MiSeq_i100_MD_863_SampleSheet.csv
+
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Wang_artic/Artic_Pool_Jul2025"
+rsync -avh htcf:/lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_863/MiSeq_i100_MD_863_* .
+
+
+Processing:
+1.  Fetch the fastqs to process:
+mkdir -p /mnt/pathogen2/kathie/Artic_Pool_Jul2025/raw
+mkdir -p /mnt/pathogen2/kathie/Artic_Pool_Jul2025/artic_results
+
+cd /mnt/pathogen2/kathie/Artic_Pool_Jul2025/raw
+rsync -avh mihindu@login.htcf.wustl.edu:/lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_863/*R1*gz .
+rsync -avh mihindu@login.htcf.wustl.edu:/lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_863/*R2*gz .
+
+2. Map Illumina reads to the reference (MN908947.3; ARTIC default), and sort with samtools. This will also sort and remove unmapped reads:
+2A.  Fetch indexed reference from resources:
+cd /mnt/pathogen2/kathie/Artic_Pool_Jul2025/artic_results
+rsync -avh /mnt/pathogen2/kathie/artic_resources/nCoV-2019.reference.fasta* .
+
+2B.  Map fastqs to the reference: 
+command: bwa mem -t 12 nCoV-2019.reference.fasta /mnt/pathogen2/kathie/Artic_Pool_Jul2025/raw//mnt/pathogen2/kathie/Artic_Pool_Jul2025/raw/Handley_A2676_Wilen_1_4dpi_IDT10_3049_IDT10_2939_AGGTGAACGG_TACTCTGACA_S106_R1_001.fastq.gz /mnt/pathogen2/kathie/Artic_Pool_Jul2025/raw//mnt/pathogen2/kathie/Artic_Pool_Jul2025/raw/Handley_A2676_Wilen_1_4dpi_IDT10_3049_IDT10_2939_AGGTGAACGG_TACTCTGACA_S106_R2_001.fastq.gz | samtools sort | samtools view -F 4 -o Handley_A2676_Wilen_1_4dpi_IDT10_3049_IDT10_2939_AGGTGAACGG_TACTCTGACA_S106.sorted.bam
+
+2B1.  Set variables:
+cd /mnt/pathogen2/kathie/Artic_Pool_Jul2025
+
+IN=./raw
+OUT=./artic_results
+REF=$OUT/nCoV-2019.reference.fasta
+
+2B2.  Run mapping:
+Loop:
+for i in $IN/*_R1_001.fastq.gz; do
+       sample=`basename $i _R1_001.fastq.gz`;
+
+echo
+echo "Mapping"
+echo
+
+bwa mem -t 12 $OUT/nCoV-2019.reference.fasta $IN/${sample}_R1_001.fastq.gz $IN/${sample}_R2_001.fastq.gz | samtools sort | samtools view -F 4 -o $OUT/${sample}.sorted.bam
+
+done
+
+3. Translate the ARTIC primer scheme into something readable by IVAR (Legacy):
+cd $OUT
+rsync -avh /mnt/pathogen2/kathie/artic_resources/ARTIC-V1.bed .
+
+cd ..
+
+4. Trim the primers off of the bam sequences using ivar:
+Loop:
+for i in $OUT/*.sorted.bam; do
+       sample=`basename $i .sorted.bam`;
+
+echo
+echo "Primer trim"
+echo
+
+ivar trim -e -i $OUT/${sample}.sorted.bam -b $OUT/ARTIC-V1.bed -p $OUT/${sample}.primertrim
+
+done
+
+5. Re-sort your bams: 
+samtools sort {sample}.primertrim.bam -o {sample}.primertrim.sorted.bam
+IF ncurses is not already installed:
+conda install -c conda-forge ncurses 
+
+Loop:
+for i in $OUT/*.primertrim.bam; do
+       sample=`basename $i .primertrim.bam`;
+
+echo
+echo "Resort bam"
+echo
+
+samtools sort $OUT/${sample}.primertrim.bam -o $OUT/${sample}.primertrim.sorted.bam
+
+done
+
+6. Get the consensus fasta that includes all the variants found, without replacing missing sequence with reference (missing sequence simply becomes "N"):
+samtools mpileup -A -d 1000 -B -Q 0 --reference artic-ncov2019/primer_schemes/nCoV-2019/V3/nCoV-2019.reference.fasta {sample}.primertrim.sorted.bam | ivar consensus -p {sample}.consensus -n N
+
+cp /mnt/pathogen2/kathie/Artic_Pool_Jul2025/artic_results/nCoV-2019.reference.fasta .
+
+Loop:
+for i in $OUT/*.primertrim.bam; do
+       sample=`basename $i .primertrim.bam`;
+
+echo
+echo "Consensus fasta"
+echo
+
+samtools mpileup -A -d 1000 -B -Q 0 --reference ./nCoV-2019.reference.fasta $OUT/${sample}.primertrim.sorted.bam | ivar consensus -p $OUT/${sample}.consensus -n N
+
+done
+
+7.  Variant calling via Lofreq:
+7A.   LoFreq Realign (per Ana):
+Loop:
+for i in $OUT/*.primertrim.sorted.bam; do
+       sample=`basename $i .primertrim.sorted.bam`;
+
+echo
+echo " LoFreq Realign: $sample"
+echo
+
+lofreq viterbi -f $REF  $OUT/${sample}.primertrim.sorted.bam  | samtools sort -n --threads 12 -o $OUT/${sample}.lofreq.realign.bam;
+
+done
+
+7B.  Insert indel qualities:
+Loop1:
+for i in $OUT/*.lofreq.realign.bam; do
+       sample=`basename $i .lofreq.realign.bam`;
+
+echo
+echo " LoFreq Insert indel qualities 1: $sample"
+echo
+
+lofreq indelqual --dindel -f $REF  $OUT/${sample}.lofreq.realign.bam | samtools sort --threads 12 -o $OUT/${sample}.lofreq.indel.bam;
+
+done
+
+Loop2:
+for i in $OUT/*.lofreq.realign.bam; do
+       sample=`basename $i .lofreq.realign.bam`;
+
+echo
+echo " LoFreq Insert indel qualities 2: $sample"
+echo
+
+lofreq alnqual -b $OUT/${sample}.lofreq.indel.bam $REF > $OUT/${sample}.lofreq.final.bam;
+
+done
+
+Loop3: 
+for i in $OUT/*.lofreq.realign.bam; do
+       sample=`basename $i .lofreq.realign.bam`;
+
+echo
+echo " LoFreq Insert indel qualities 3: $sample"
+echo
+
+samtools index $OUT/${sample}.lofreq.final.bam;
+
+done
+
+7C.  Call variants with LoFreq: 
+Loop:
+
+for i in $OUT/*.lofreq.final.bam; do
+       sample=`basename $i .lofreq.final.bam`;
+
+echo
+echo " Call variants: $sample"
+echo
+
+lofreq call-parallel --pp-threads 12 --force-overwrite --no-default-filter --call-indels -f $REF -o $OUT/${sample}_vars.vcf $OUT/${sample}.lofreq.final.bam;
+
+done
+
+7D.  Filter vcf files:
+Loop:
+for i in $OUT/*_vars.vcf; do
+
+	sample=`basename $i _vars.vcf`;
+
+	echo "Filtering: $sample";
+
+	lofreq filter -i $i -o $OUT/${sample}_vars.filt.vcf \
+		-v 75;
+
+	echo "Done"
+
+done
+
+8.  Run snpEFF using defined reference genome data:
+Loop:
+for i in $OUT/*_vars.filt.vcf; do 
+
+	sample=`basename $i _vars.filt.vcf`;
+
+	echo "Processing: $sample";
+
+	java -jar /home/kathiem/snpEff/snpEff.jar MN908947.3 $i -s $OUT/${sample}_summary.html > $OUT/${sample}.snpEFF.ann.vcf;
+
+	grep -v "^##" $OUT/${sample}.snpEFF.ann.vcf | \
+		tail -n+2 | \
+		cut -f8 | \
+		sed 's/|/\t/g' | \
+		cut -f1-16 | \
+		sed '1i INFO\tEFFECT\tPUTATIVE_IMPACT\tGENE_NAME\tGENE_ID\tFEATURE_TYPE\tFEATURE_ID\tTRANSCRIPT_TYPE\tEXON_INTRON_RANK\tHGVSc\tHGVSp\tcDNA_POSITION_AND_LENGTH\tCDS_POSITION_AND_LENGTH\tPROTEIN_POSITION_AND_LENGTH\tDISTANCE_TO_FEATURE\tERROR' > $OUT/${sample}.snpEFF.ann.tmp;
+
+	grep -v "^##" $OUT/${sample}.snpEFF.ann.vcf | \
+		cut -f1-7 > $OUT/${sample}.ann.base.vcf;
+
+	paste $OUT/${sample}.ann.base.vcf $OUT/${sample}.snpEFF.ann.tmp > $OUT/${sample}.snpEFF.ann.tsv;
+
+	rm $OUT/${sample}.snpEFF.ann.tmp;
+	rm $OUT/${sample}.ann.base.vcf;
+
+done
+
+9.  Post CZI pipeline:
+9A:  Run Pangolin:
+- Install if needed
+conda install -c bioconda pangolin
+
+DONE previously
+
+9A1.  Cat individual consensus.fa files:
+cat $OUT/*consensus.fa > $OUT/2025_07_covid_combined.fa
+
+9A2.  Run:
+pangolin $OUT/2025_07_covid_combined.fa --outfile $OUT/2025_07_covid.pangolin_lineage.csv
+
+cd /mnt/pathogen2/kathie/Artic_Pool_Jul2025/artic_results
+grep -c "fail" 2025_07_covid.pangolin_lineage.csv
+1
+
+9A3.  Download results:
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Wang_artic/Artic_Pool_Jul2025"
+rsync -avh kathiem@10.39.174.195:/mnt/pathogen2/kathie/Artic_Pool_Jul2025/artic_results/2025_07_covid_combined.fa .                                                                               
+
+9B.  Run Nextclade3 on the web: YAH
+https://clades.nextstrain.org/
+Upload: 2025_07_covid_combined.fa
+
+Download all
+
+9C.  Join Lineage: 2024_10_22_2024_covid.Rmd
+Produced final file in R: covid_full_filtered_joined_lineage.csv
+
+
+9D.  vcfConvert: 
+Loop:
+for i in $OUT/*_vars.filt.vcf; do 
+
+	sample=`basename $i _vars.filt.vcf`;
+
+	echo "Processing: $sample";
+
+sed 's/MN908947.3/NC_045512.2/g' $OUT/${sample}_vars.filt.vcf > $OUT/${sample}.converted.vcf;
+
+done
+
+9E.  SnpEff - ARTIC specific:
+Loop:
+for i in $OUT/*.converted.vcf; do 
+
+	sample=`basename $i .converted.vcf`;
+
+	echo "Processing: $sample";
+
+	java -Xmx8g -jar /home/kathiem/snpEff/snpEff.jar NC_045512.2 $OUT/${sample}.converted.vcf > $OUT/${sample}.converted.ann.vcf
+    mv snpEff_genes.txt $OUT/${sample}_snpEff_genes.txt
+    mv snpEff_summary.html $OUT/${sample}_snpEff_summary.html
+
+done
+
+9F.  snpSift: 
+- Install if needed
+conda install -c "bioconda/label/cf201901" snpsift
+
+DONE previously
+
+Loop:
+for i in $OUT/*.converted.ann.vcf; do 
+
+	sample=`basename $i .converted.ann.vcf`;
+
+	echo "SnpSift: $sample";
+
+	java -jar /mnt/pathogen2/kathie/software/miniconda3/share/snpsift-4.3.1t-1/SnpSift.jar extractFields $OUT/${sample}.converted.ann.vcf POS REF ALT DP4 "ANN[0].EFFECT" "ANN[0].GENE" "ANN[0].HGVS_P" > $OUT/${sample}.snpsift.txt;
+
+done
+
+9G.  Remove sequences with >1000 Ns; >3000 Ns:
+cd /Users/handley_lab/Resources/perl_scripts
+rsync -avh ./N_count_and_clean.pl kathiem@10.39.174.195:/mnt/pathogen2/kathie/Artic_Pool_Jul2025/artic_results
+
+cd /mnt/pathogen2/kathie/Artic_Pool_Jul2025/artic_results
+perl N_count_and_clean.pl 2025_07_covid_combined.fa 1000
+
+Ars longa, vita brevis - Art is long, life is short - Hippocrates
+Finished counting your N's
+ Sequences with 1000 or fewer Ns: 40
+Your sequences are in: 2025_07_covid_combined_1000_N_or_less.fasta
+
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Wang_artic/Artic_Pool_Jul2025"
+rsync -avh kathiem@10.39.174.195:/mnt/pathogen2/kathie/Artic_Pool_Jul2025/artic_results .
+
+10.  Push to github:
+
+

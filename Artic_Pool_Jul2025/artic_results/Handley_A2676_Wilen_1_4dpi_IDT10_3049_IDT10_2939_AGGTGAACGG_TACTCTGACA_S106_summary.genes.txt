@@ -1,0 +1,12 @@
+# The following table is formatted as tab separated values. 
+#GeneName	GeneId	TranscriptId	BioType	variants_impact_HIGH	variants_impact_LOW	variants_impact_MODERATE	variants_impact_MODIFIER	variants_effect_conservative_inframe_deletion	variants_effect_conservative_inframe_insertion	variants_effect_disruptive_inframe_deletion	variants_effect_downstream_gene_variant	variants_effect_frameshift_variant	variants_effect_missense_variant	variants_effect_splice_region_variant	variants_effect_stop_gained	variants_effect_stop_lost	variants_effect_synonymous_variant	variants_effect_upstream_gene_variant
+E	Gene_26244_26471	QHD43418.1	protein_coding	2	0	0	122	0	0	0	57	2	0	0	0	0	0	65
+M	Gene_26522_27190	QHD43419.1	protein_coding	9	2	5	103	1	0	0	41	9	4	0	0	0	2	62
+N	Gene_28273_29532	QHD43423.2	protein_coding	7	0	8	79	2	1	2	12	6	4	0	1	0	0	67
+ORF10	Gene_29557_29673	QHI42199.1	protein_coding	2	0	1	71	0	0	0	9	1	1	0	1	0	0	62
+ORF3a	Gene_25392_26219	QHD43417.1	protein_coding	1	4	3	128	0	0	1	59	1	2	0	0	0	4	69
+ORF6	Gene_27201_27386	QHD43420.1	protein_coding	2	2	2	102	0	0	3	35	1	0	1	0	1	2	67
+ORF7a	Gene_27393_27758	QHD43421.1	protein_coding	2	0	3	101	3	0	0	31	1	1	1	0	1	0	70
+ORF8	Gene_27893_28258	QHD43422.1	protein_coding	1	0	1	95	0	0	0	27	1	1	0	0	0	0	68
+S	Gene_21562_25383	QHD43416.1	protein_coding	19	4	28	125	4	1	5	67	18	18	0	1	0	4	58
+orf1ab	Gene_265_21554	QHD43415.1	protein_coding	82	49	83	61	6	0	6	61	80	71	0	3	0	49	0

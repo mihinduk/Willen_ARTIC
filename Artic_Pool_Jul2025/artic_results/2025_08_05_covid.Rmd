@@ -1,0 +1,93 @@
+---
+title: "2025_08_05_covid"
+author: "KM"
+date: "2025-08-05"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+---
+title: "2025_08_05_covid"
+author: "KM"
+date: "2025-08-05"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Load-libraries}
+library("vroom"); packageVersion("vroom")
+library("reshape"); packageVersion("reshape")
+library("plotly"); packageVersion("plotly")
+library("ggpubr"); packageVersion("ggpubr")
+library("glue"); packageVersion("glue")
+library("ggrepel"); packageVersion("ggrepel")
+library("ggsci"); packageVersion("ggsci")
+library("lubridate"); packageVersion("lubridate")
+library("tidylog"); packageVersion("tidylog")
+library("data.table"); packageVersion("data.table")
+library("phyloseq"); packageVersion("phyloseq")
+library("speedyseq"); packageVersion("speedyseq")
+library("plyr"); packageVersion("plyr")
+library("tidyverse"); packageVersion("tidyverse")
+library("rstatix"); packageVersion("rstatix")
+
+library("RColorBrewer"); packageVersion("RColorBrewer")
+
+# Set a random seed so that exact results can be reproduced
+set.seed(1000)
+```
+
+# Import Phylogenic
+```{r import-Phylogenic}
+# Pangolin 
+pangolin_lineage <- as_tibble(fread(file = "/Users/handley_lab/Handley Lab Dropbox/virome/Wang_artic/Artic_Pool_Jul2025/artic_results/2025_07_covid.pangolin_lineage.csv", header = TRUE, stringsAsFactors = TRUE)) 
+dim(pangolin_lineage)
+# [1] 6  7
+colnames(pangolin_lineage)
+# [1] "taxon"            "lineage"          "SH-alrt"          "UFbootstrap"      "lineages_version"
+# [6] "status"           "note"
+
+# Nextclade3
+nextclade_lineage<- as_tibble(fread(file = "/Users/handley_lab/Handley Lab Dropbox/virome/Wang_artic/Artic_Pool_Jul2025/artic_results/nextclade/nextclade.tsv", header = TRUE, stringsAsFactors = TRUE, na.strings = "")) %>%
+  unite(clade_out, clade_display, clade_who, sep = " ", remove = FALSE)
+dim(nextclade_lineage)
+# [1] 6 102
+
+colnames(nextclade_lineage)
+
+# Nextclade3 - max 1000 Ns
+nextclade_lineage.1000 <- as_tibble(fread(file = "/Users/handley_lab/Handley Lab Dropbox/virome/Wang_artic/Artic_Pool_Jul2025/artic_results/nextclade3_1000N/nextclade.tsv", header = TRUE, stringsAsFactors = TRUE, na.strings = "")) %>%
+  unite(clade_out, clade_display, clade_who, sep = " ", remove = FALSE)
+dim(nextclade_lineage.1000)
+# [1] 6 102
+
+# Merge
+# final_lineage = pd.merge(left=pangolin,right=nextclade,left_on='Sample_Name',right_on='Sample_Name')
+
+final_lineage = full_join(pangolin_lineage, nextclade_lineage, by = c("taxon" = "seqName")) %>%
+  select(c(1,2,10)) %>% # Sample_Name, Pangolin_lineage, Nextclade_lineage
+  rename(c("id" = "taxon", "Pangolin__autocolor" = "lineage", "Nextclade__autocolor" = "clade_out"))
+
+write.table(final_lineage, file = "/Users/handley_lab/Handley Lab Dropbox/virome/Wang_artic/Artic_Pool_Jul2025/artic_results/2025_07_31_covid_full_filtered_joined_lineage.csv", sep = ",", row.names = FALSE, quote=FALSE)
+
+# Merge - max 1000 Ns
+# final_lineage = pd.merge(left=pangolin,right=nextclade,left_on='Sample_Name',right_on='Sample_Name')
+
+final_lineage.1000 = right_join(pangolin_lineage, nextclade_lineage.1000, by = c("taxon" = "seqName")) %>%
+  select(c(1,2,10)) %>% # Sample_Name, Pangolin_lineage, Nextclade_lineage
+  rename(c("id" = "taxon", "Pangolin__autocolor" = "lineage", "Nextclade__autocolor" = "clade_out"))
+
+write.table(final_lineage.1000, file = "/Users/handley_lab/Handley Lab Dropbox/virome/Wang_artic/Artic_Pool_Jul2025/artic_results/2025_07_31_covid_full_filtered_joined_lineage_1000N.csv", sep = ",", row.names = FALSE, quote=FALSE)
+
+
+```
