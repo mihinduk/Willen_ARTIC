@@ -1,0 +1,41 @@
+# Data files (too large for git)
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+*.bam
+*.bai
+*.sam
+*.fa
+*.fasta
+*.fna
+
+# Results (regenerable)
+*.vcf
+*.html
+*.csv
+
+# Allow small reference files
+!*reference.fasta
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.log
+*.out
+*.err
+
+# R/RStudio
+.Rhistory
+.Rdata
+.RDataTmp
