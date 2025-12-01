@@ -1,0 +1,704 @@
+2025_11_24_Download_of_ARTIC_MiSeq_i100_MD_327_processing:
+/lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_327
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Willen_artic/Artic_Pool_Nov2025"
+
+Collaborator: Craig Willen
+
+1.  Follow link in email and log in to Globus: 
+NOTE: Login as Washington University in St. Louis NOT with ORCID
+
+
+2.  Put HTCF@WUSTL in the search bar:
+
+
+3.  Put the path to your storage in the bar below HTCF@WUSTL:
+/lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_327
+
+
+4.  Select all in the collection panel and click "Transfer or Sync", then "Start"
+
+Processing:
+1.  Fetch the fastqs to process:
+mkdir -p /mnt/pathogen2/kathie/Artic_Pool_Nov2025/raw
+mkdir -p /mnt/pathogen2/kathie/Artic_Pool_Nov2025/artic_results
+
+cd /mnt/pathogen2/kathie/Artic_Pool_Nov2025/raw
+rsync -avh mihindu@login.htcf.wustl.edu:/lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_327/*R1*gz .
+rsync -avh mihindu@login.htcf.wustl.edu:/lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_327/*R2*gz .
+
+2. Map Illumina reads to the reference (MN908947.3; ARTIC default), and sort with samtools. This will also sort and remove unmapped reads:
+2A.  Fetch indexed reference from resources:
+cd /mnt/pathogen2/kathie/Artic_Pool_Nov2025/artic_results
+rsync -avh /mnt/pathogen2/kathie/artic_resources/nCoV-2019.reference.fasta* .
+
+2B.  Map fastqs to the reference: 
+command: bwa mem -t 12 nCoV-2019.reference.fasta /mnt/pathogen2/kathie/Artic_Pool_Nov2025/raw/mnt/pathogen2/kathie/Artic_Pool_Nov2025/raw/Handley_A2676_Wilen_1_4dpi_IDT10_3049_IDT10_2939_AGGTGAACGG_TACTCTGACA_S106_R1_001.fastq.gz /mnt/pathogen2/kathie/Artic_Pool_Nov2025/raw//mnt/pathogen2/kathie/Artic_Pool_Nov2025/raw/Handley_A2676_Wilen_1_4dpi_IDT10_3049_IDT10_2939_AGGTGAACGG_TACTCTGACA_S106_R2_001.fastq.gz | samtools sort | samtools view -F 4 -o Handley_A2676_Wilen_1_4dpi_IDT10_3049_IDT10_2939_AGGTGAACGG_TACTCTGACA_S106.sorted.bam
+
+2B1.  Set variables:
+cd /mnt/pathogen2/kathie/Artic_Pool_Nov2025
+
+IN=./raw
+OUT=./artic_results
+REF=$OUT/nCoV-2019.reference.fasta
+
+2B2.  Run mapping:
+Loop:
+for i in $IN/*_R1_001.fastq.gz; do
+       sample=`basename $i _R1_001.fastq.gz`;
+
+echo
+echo "Mapping"
+echo
+
+bwa mem -t 12 $OUT/nCoV-2019.reference.fasta $IN/${sample}_R1_001.fastq.gz $IN/${sample}_R2_001.fastq.gz | samtools sort | samtools view -F 4 -o $OUT/${sample}.sorted.bam
+
+done
+
+3. Translate the ARTIC primer scheme into something readable by IVAR (Legacy):
+cd $OUT
+rsync -avh /mnt/pathogen2/kathie/artic_resources/ARTIC-V1.bed .
+
+cd ..
+
+4. Trim the primers off of the bam sequences using ivar:
+Loop:
+for i in $OUT/*.sorted.bam; do
+       sample=`basename $i .sorted.bam`;
+
+echo
+echo "Primer trim"
+echo
+
+ivar trim -e -i $OUT/${sample}.sorted.bam -b $OUT/ARTIC-V1.bed -p $OUT/${sample}.primertrim
+
+done
+
+5. Re-sort your bams: 
+samtools sort {sample}.primertrim.bam -o {sample}.primertrim.sorted.bam
+IF ncurses is not already installed:
+conda install -c conda-forge ncurses 
+
+Loop:
+for i in $OUT/*.primertrim.bam; do
+       sample=`basename $i .primertrim.bam`;
+
+echo
+echo "Resort bam"
+echo
+
+samtools sort $OUT/${sample}.primertrim.bam -o $OUT/${sample}.primertrim.sorted.bam
+
+done
+
+6. Get the consensus fasta that includes all the variants found, without replacing missing sequence with reference (missing sequence simply becomes "N"):
+samtools mpileup -A -d 1000 -B -Q 0 --reference artic-ncov2019/primer_schemes/nCoV-2019/V3/nCoV-2019.reference.fasta {sample}.primertrim.sorted.bam | ivar consensus -p {sample}.consensus -n N
+
+cp /mnt/pathogen2/kathie/Artic_Pool_Nov2025/artic_results/nCoV-2019.reference.fasta .
+
+Loop:
+for i in $OUT/*.primertrim.bam; do
+       sample=`basename $i .primertrim.bam`;
+
+echo
+echo "Consensus fasta"
+echo
+
+samtools mpileup -A -d 1000 -B -Q 0 --reference ./nCoV-2019.reference.fasta $OUT/${sample}.primertrim.sorted.bam | ivar consensus -p $OUT/${sample}.consensus -n N
+
+done
+
+7.  Variant calling via Lofreq:
+7A.   LoFreq Realign (per Ana):
+Loop:
+for i in $OUT/*.primertrim.sorted.bam; do
+       sample=`basename $i .primertrim.sorted.bam`;
+
+echo
+echo " LoFreq Realign: $sample"
+echo
+
+lofreq viterbi -f $REF  $OUT/${sample}.primertrim.sorted.bam  | samtools sort -n --threads 12 -o $OUT/${sample}.lofreq.realign.bam;
+
+done
+
+7B.  Insert indel qualities:
+Loop1:
+for i in $OUT/*.lofreq.realign.bam; do
+       sample=`basename $i .lofreq.realign.bam`;
+
+echo
+echo " LoFreq Insert indel qualities 1: $sample"
+echo
+
+lofreq indelqual --dindel -f $REF  $OUT/${sample}.lofreq.realign.bam | samtools sort --threads 12 -o $OUT/${sample}.lofreq.indel.bam;
+
+done
+
+Loop2:
+for i in $OUT/*.lofreq.realign.bam; do
+       sample=`basename $i .lofreq.realign.bam`;
+
+echo
+echo " LoFreq Insert indel qualities 2: $sample"
+echo
+
+lofreq alnqual -b $OUT/${sample}.lofreq.indel.bam $REF > $OUT/${sample}.lofreq.final.bam;
+
+done
+
+Loop3: 
+for i in $OUT/*.lofreq.realign.bam; do
+       sample=`basename $i .lofreq.realign.bam`;
+
+echo
+echo " LoFreq Insert indel qualities 3: $sample"
+echo
+
+samtools index $OUT/${sample}.lofreq.final.bam;
+
+done
+
+7C.  Call variants with LoFreq: 
+Loop:
+
+for i in $OUT/*.lofreq.final.bam; do
+       sample=`basename $i .lofreq.final.bam`;
+
+echo
+echo " Call variants: $sample"
+echo
+
+lofreq call-parallel --pp-threads 12 --force-overwrite --no-default-filter --call-indels -f $REF -o $OUT/${sample}_vars.vcf $OUT/${sample}.lofreq.final.bam;
+
+done
+
+7D.  Filter vcf files:
+Loop:
+for i in $OUT/*_vars.vcf; do
+
+	sample=`basename $i _vars.vcf`;
+
+	echo "Filtering: $sample";
+
+	lofreq filter -i $i -o $OUT/${sample}_vars.filt.vcf \
+		-v 75;
+
+	echo "Done"
+
+done
+
+8.  Run snpEFF using defined reference genome data:
+Loop:
+for i in $OUT/*_vars.filt.vcf; do 
+
+	sample=`basename $i _vars.filt.vcf`;
+
+	echo "Processing: $sample";
+
+	java -jar /home/kathiem/snpEff/snpEff.jar MN908947.3 $i -s $OUT/${sample}_summary.html > $OUT/${sample}.snpEFF.ann.vcf;
+
+	grep -v "^##" $OUT/${sample}.snpEFF.ann.vcf | \
+		tail -n+2 | \
+		cut -f8 | \
+		sed 's/|/\t/g' | \
+		cut -f1-16 | \
+		sed '1i INFO\tEFFECT\tPUTATIVE_IMPACT\tGENE_NAME\tGENE_ID\tFEATURE_TYPE\tFEATURE_ID\tTRANSCRIPT_TYPE\tEXON_INTRON_RANK\tHGVSc\tHGVSp\tcDNA_POSITION_AND_LENGTH\tCDS_POSITION_AND_LENGTH\tPROTEIN_POSITION_AND_LENGTH\tDISTANCE_TO_FEATURE\tERROR' > $OUT/${sample}.snpEFF.ann.tmp;
+
+	grep -v "^##" $OUT/${sample}.snpEFF.ann.vcf | \
+		cut -f1-7 > $OUT/${sample}.ann.base.vcf;
+
+	paste $OUT/${sample}.ann.base.vcf $OUT/${sample}.snpEFF.ann.tmp > $OUT/${sample}.snpEFF.ann.tsv;
+
+	rm $OUT/${sample}.snpEFF.ann.tmp;
+	rm $OUT/${sample}.ann.base.vcf;
+
+done
+
+9.  Post CZI pipeline:
+9A:  Run Pangolin:
+- Install if needed
+conda install -c bioconda pangolin
+
+DONE previously
+
+9A1.  Cat individual consensus.fa files:
+cat $OUT/*consensus.fa > $OUT/2025_11_covid_combined.fa
+
+9A2.  Run:
+pangolin $OUT/2025_11_covid_combined.fa --outfile $OUT/2025_11_covid.pangolin_lineage.csv
+
+cd /mnt/pathogen2/kathie/Artic_Pool_Nov2025/artic_results
+grep -c "fail" 2025_11_covid.pangolin_lineage.csv
+9
+
+9A3.  Download results:
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Willen_artic/Artic_Pool_Nov2025"
+rsync -avh kathiem@10.39.174.195:/mnt/pathogen2/kathie/Artic_Pool_Nov2025/artic_results/2025_11_covid_combined.fa .                                                                               
+
+***** STOPPED HERE because results too poor to continue *****
+
+9B.  Run Nextclade3 on the web: 
+https://clades.nextstrain.org/
+Upload: 2025_11_covid_combined.fa
+
+Download all
+
+9C.  Join Lineage: 2024_10_22_2024_covid.Rmd
+Produced final file in R: covid_full_filtered_joined_lineage.csv
+
+
+9D.  vcfConvert: 
+Loop:
+for i in $OUT/*_vars.filt.vcf; do 
+
+	sample=`basename $i _vars.filt.vcf`;
+
+	echo "Processing: $sample";
+
+sed 's/MN908947.3/NC_045512.2/g' $OUT/${sample}_vars.filt.vcf > $OUT/${sample}.converted.vcf;
+
+done
+
+9E.  SnpEff - ARTIC specific:
+Loop:
+for i in $OUT/*.converted.vcf; do 
+
+	sample=`basename $i .converted.vcf`;
+
+	echo "Processing: $sample";
+
+	java -Xmx8g -jar /home/kathiem/snpEff/snpEff.jar NC_045512.2 $OUT/${sample}.converted.vcf > $OUT/${sample}.converted.ann.vcf
+    mv snpEff_genes.txt $OUT/${sample}_snpEff_genes.txt
+    mv snpEff_summary.html $OUT/${sample}_snpEff_summary.html
+
+done
+
+9F.  snpSift: 
+- Install if needed
+conda install -c "bioconda/label/cf201901" snpsift
+
+DONE previously
+
+Loop:
+for i in $OUT/*.converted.ann.vcf; do 
+
+	sample=`basename $i .converted.ann.vcf`;
+
+	echo "SnpSift: $sample";
+
+	java -jar /mnt/pathogen2/kathie/software/miniconda3/share/snpsift-4.3.1t-1/SnpSift.jar extractFields $OUT/${sample}.converted.ann.vcf POS REF ALT DP4 "ANN[0].EFFECT" "ANN[0].GENE" "ANN[0].HGVS_P" > $OUT/${sample}.snpsift.txt;
+
+done
+
+9G.  Remove sequences with >1000 Ns; >3000 Ns:
+cd /Users/handley_lab/Resources/perl_scripts
+rsync -avh ./N_count_and_clean.pl kathiem@10.39.174.195:/mnt/pathogen2/kathie/Artic_Pool_Nov2025/artic_results
+
+cd /mnt/pathogen2/kathie/Artic_Pool_Nov2025/artic_results
+perl N_count_and_clean.pl 2025_11_covid_combined.fa 1000
+
+Ars longa, vita brevis - Art is long, life is short - Hippocrates
+Finished counting your N's
+ Sequences with 1000 or fewer Ns: 40
+Your sequences are in: 2025_11_covid_combined_1000_N_or_less.fasta
+
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Willen_artic/Artic_Pool_Nov2025"
+rsync -avh kathiem@10.39.174.195:/mnt/pathogen2/kathie/Artic_Pool_Nov2025/artic_results .
+
+10.  Push to github:
+https://github.com/mihinduk/Willen_ARTIC.git
+
+Sent follow up email to Jessica re security 08/19/2025
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+Per Craig Willen:
+Does that mean there was no detectable viral rna or that there was a technical problem?
+
+Just for some background, we do not expect to get full length genome sequences from these samples. We suspect that we will only see fragments of genomes from each sample. In particularly I suspect we will get some 3’ genome fragments but not 5’ genome fragments because of the subgenomic RNAs at the 3’ end which are more abundant.
+ 
+Does this make sense? Will your analysis pipeline enable mapping of these reads even if a contig can not be assembled?
+
+Plan:  Contig fishing; read fishing
+1.   Read Fishing:
+1A.  Fetch genome:
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Willen_artic/Artic_Pool_Nov2025"
+
+ssh kathiem@10.39.174.195
+cd /mnt/pathogen2/kathie/artic_resources/
+rsync -avh ./nCoV-2019.reference.fasta* mihindu@login.htcf.wustl.edu:/scratch/sahlab/kathie/willen_covid_hunt
+
+ssh htcf
+cd /scratch/sahlab/kathie/willen_covid_hunt
+rsync -avh /lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_327/*R1*gz .
+rsync -avh /lts/sahlab/data4/DATA_DOWNLOADS_3/MiSeq_i100_MD_327/*R2*gz .
+
+
+1B. Index:
+source /ref/sahlab/software/anaconda3/bin/activate
+conda activate vicast_analyze
+
+bwa index nCoV-2019.reference.fasta
+
+1C. Align:
+Handley_A2682_54325_Wilen_1_5405_RECTUM:
+bwa mem -t 12 nCoV-2019.reference.fasta Handley_A2682_54325_Wilen_1_5405-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1038_AGACTGATCA_ACAACCACCA_S32_R1_001.fastq.gz Handley_A2682_54325_Wilen_1_5405-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1038_AGACTGATCA_ACAACCACCA_S32_R2_001.fastq.gz > mappings.sam
+
+samtools sort --threads 12 -O bam mappings.sam > mappings.sorted.bam
+
+samtools view -h -f 2048 mappings.sorted.bam > mappings.supplemental.bam
+samtools view -h -F 2048 mappings.sorted.bam > mappings.nonsupplemental.bam
+
+samtools view mappings.nonsupplemental.bam > mappings.nonsupplemental.sam
+
+cut -f1-5 mappings.nonsupplemental.sam | sed '1iid\tflag\tcontig\tposition\tmapping_qual' > mappings.final.sam
+
+for f in mappings.*
+do
+    mv "$f" "Handley_A2682_54325_Wilen_1_5405_RECTUM_$f"
+done
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+Handley_A2683_54324_Wilen_2_5374:
+bwa mem -t 12 nCoV-2019.reference.fasta Handley_A2683_54324_Wilen_2_5374-COVID-CRYO_MGI_IDT_10nt_UDIUMI_1039_AACCAACCAA_CCTGCACTTC_S33_R1_001.fastq.gz Handley_A2683_54324_Wilen_2_5374-COVID-CRYO_MGI_IDT_10nt_UDIUMI_1039_AACCAACCAA_CCTGCACTTC_S33_R2_001.fastq.gz > mappings.sam
+
+samtools sort --threads 12 -O bam mappings.sam > mappings.sorted.bam
+
+samtools view -h -f 2048 mappings.sorted.bam > mappings.supplemental.bam
+samtools view -h -F 2048 mappings.sorted.bam > mappings.nonsupplemental.bam
+
+samtools view mappings.nonsupplemental.bam > mappings.nonsupplemental.sam
+
+cut -f1-5 mappings.nonsupplemental.sam | sed '1iid\tflag\tcontig\tposition\tmapping_qual' > mappings.final.sam
+
+for f in mappings.*
+do
+    mv "$f" "Handley_A2683_54324_Wilen_2_5374_$f"
+done
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+Handley_A2684_54323_Wilen_3_5897_RECTUM:
+bwa mem -t 12 nCoV-2019.reference.fasta Handley_A2684_54323_Wilen_3_5897-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1040_CAATTGCCGG_GCTTGTTGAA_S34_R1_001.fastq.gz Handley_A2684_54323_Wilen_3_5897-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1040_CAATTGCCGG_GCTTGTTGAA_S34_R2_001.fastq.gz  > mappings.sam
+
+samtools sort --threads 12 -O bam mappings.sam > mappings.sorted.bam
+
+samtools view -h -f 2048 mappings.sorted.bam > mappings.supplemental.bam
+samtools view -h -F 2048 mappings.sorted.bam > mappings.nonsupplemental.bam
+
+samtools view mappings.nonsupplemental.bam > mappings.nonsupplemental.sam
+
+cut -f1-5 mappings.nonsupplemental.sam | sed '1iid\tflag\tcontig\tposition\tmapping_qual' > mappings.final.sam
+
+for f in mappings.*
+do
+    mv "$f" "Handley_A2684_54323_Wilen_3_5897_RECTUM_$f"
+done
+
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM:
+bwa mem -t 12 nCoV-2019.reference.fasta Handley_A2685_54322_Wilen_4_COVID-5323-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1041_GCTACAGGTC_GAGAGGTAAT_S35_R1_001.fastq.gz Handley_A2685_54322_Wilen_4_COVID-5323-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1041_GCTACAGGTC_GAGAGGTAAT_S35_R2_001.fastq.gz > mappings.sam
+
+samtools sort --threads 12 -O bam mappings.sam > mappings.sorted.bam
+
+samtools view -h -f 2048 mappings.sorted.bam > mappings.supplemental.bam
+samtools view -h -F 2048 mappings.sorted.bam > mappings.nonsupplemental.bam
+
+samtools view mappings.nonsupplemental.bam > mappings.nonsupplemental.sam
+
+cut -f1-5 mappings.nonsupplemental.sam | sed '1iid\tflag\tcontig\tposition\tmapping_qual' > mappings.final.sam
+
+for f in mappings.*
+do
+    mv "$f" "Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_$f"
+done
+
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM: 
+bwa mem -t 12 nCoV-2019.reference.fasta Handley_A2686_54321_Wilen_5_LIINC-5104-RECTUM_MGI_IDT_10nt_UDIUMI_1042_TCGGTGGAAC_TATGTGAGGT_S36_R1_001.fastq.gz Handley_A2686_54321_Wilen_5_LIINC-5104-RECTUM_MGI_IDT_10nt_UDIUMI_1042_TCGGTGGAAC_TATGTGAGGT_S36_R2_001.fastq.gz  > mappings.sam
+
+samtools sort --threads 12 -O bam mappings.sam > mappings.sorted.bam
+
+samtools view -h -f 2048 mappings.sorted.bam > mappings.supplemental.bam
+samtools view -h -F 2048 mappings.sorted.bam > mappings.nonsupplemental.bam
+
+samtools view mappings.nonsupplemental.bam > mappings.nonsupplemental.sam
+
+cut -f1-5 mappings.nonsupplemental.sam | sed '1iid\tflag\tcontig\tposition\tmapping_qual' > mappings.final.sam
+
+for f in mappings.*
+do
+    mv "$f" "Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_$f"
+done
+
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM:
+bwa mem -t 12 nCoV-2019.reference.fasta Handley_A2687_54320_Wilen_6_LIINC-5104-ILEUM_MGI_IDT_10nt_UDIUMI_1047_AGGTGAACGG_TACTCTGACA_S37_R1_001.fastq.gz Handley_A2687_54320_Wilen_6_LIINC-5104-ILEUM_MGI_IDT_10nt_UDIUMI_1047_AGGTGAACGG_TACTCTGACA_S37_R2_001.fastq.gz  > mappings.sam
+
+samtools sort --threads 12 -O bam mappings.sam > mappings.sorted.bam
+
+samtools view -h -f 2048 mappings.sorted.bam > mappings.supplemental.bam
+samtools view -h -F 2048 mappings.sorted.bam > mappings.nonsupplemental.bam
+
+samtools view mappings.nonsupplemental.bam > mappings.nonsupplemental.sam
+
+cut -f1-5 mappings.nonsupplemental.sam | sed '1iid\tflag\tcontig\tposition\tmapping_qual' > mappings.final.sam
+
+for f in mappings.*
+do
+    mv "$f" "Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_$f"
+done
+
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+Handley_A2688_54319_Wilen_7_FS12:
+bwa mem -t 12 nCoV-2019.reference.fasta Handley_A2688_54319_Wilen_7_FS12-07815_MGI_IDT_10nt_UDIUMI_1049_AAGATACAGC_CGTATAGACA_S38_R1_001.fastq.gz Handley_A2688_54319_Wilen_7_FS12-07815_MGI_IDT_10nt_UDIUMI_1049_AAGATACAGC_CGTATAGACA_S38_R2_001.fastq.gz  > mappings.sam
+
+samtools sort --threads 12 -O bam mappings.sam > mappings.sorted.bam
+
+samtools view -h -f 2048 mappings.sorted.bam > mappings.supplemental.bam
+samtools view -h -F 2048 mappings.sorted.bam > mappings.nonsupplemental.bam
+
+samtools view mappings.nonsupplemental.bam > mappings.nonsupplemental.sam
+
+cut -f1-5 mappings.nonsupplemental.sam | sed '1iid\tflag\tcontig\tposition\tmapping_qual' > mappings.final.sam
+
+for f in mappings.*
+do
+    mv "$f" "Handley_A2688_54319_Wilen_7_FS12_$f"
+done
+
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+Handley_A2689_54318_Wilen_8_FS12:
+bwa mem -t 12 nCoV-2019.reference.fasta Handley_A2689_54318_Wilen_8_FS12-07824_MGI_IDT_10nt_UDIUMI_1055_TCAGTAGCAG_TCCGTCGCTA_S39_R1_001.fastq.gz Handley_A2689_54318_Wilen_8_FS12-07824_MGI_IDT_10nt_UDIUMI_1055_TCAGTAGCAG_TCCGTCGCTA_S39_R2_001.fastq.gz  > mappings.sam
+
+samtools sort --threads 12 -O bam mappings.sam > mappings.sorted.bam
+
+samtools view -h -f 2048 mappings.sorted.bam > mappings.supplemental.bam
+samtools view -h -F 2048 mappings.sorted.bam > mappings.nonsupplemental.bam
+
+samtools view mappings.nonsupplemental.bam > mappings.nonsupplemental.sam
+
+cut -f1-5 mappings.nonsupplemental.sam | sed '1iid\tflag\tcontig\tposition\tmapping_qual' > mappings.final.sam
+
+for f in mappings.*
+do
+    mv "$f" "Handley_A2689_54318_Wilen_8_FS12_$f"
+done
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+Handley_A2690_54317_Wilen_9:
+bwa mem -t 12 nCoV-2019.reference.fasta Handley_A2690_54317_Wilen_9_FS12-07825_MGI_IDT_10nt_UDIUMI_1057_AACCAGGAGA_ACGAAGCGAT_S40_R1_001.fastq.gz Handley_A2690_54317_Wilen_9_FS12-07825_MGI_IDT_10nt_UDIUMI_1057_AACCAGGAGA_ACGAAGCGAT_S40_R2_001.fastq.gz  > mappings.sam
+
+samtools sort --threads 12 -O bam mappings.sam > mappings.sorted.bam
+
+samtools view -h -f 2048 mappings.sorted.bam > mappings.supplemental.bam
+samtools view -h -F 2048 mappings.sorted.bam > mappings.nonsupplemental.bam
+
+samtools view mappings.nonsupplemental.bam > mappings.nonsupplemental.sam
+
+cut -f1-5 mappings.nonsupplemental.sam | sed '1iid\tflag\tcontig\tposition\tmapping_qual' > mappings.final.sam
+
+for f in mappings.*
+do
+    mv "$f" "Handley_A2690_54317_Wilen_9_$f"
+done
+
+1D.  Return:
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Willen_artic/Artic_Pool_Nov2025"
+rsync -avh htcf:/scratch/sahlab/kathie/willen_covid_hunt/*mappings.final.sam  .
+
+1E.  Parse for high quality matches: NOTE: not necessary
+flag:
+0	mapped - forward strand	
+16	mapped - reverse strand
+4	unmapped
+
+10	1 in 10 chance of error (mapping accuracy of 90%)
+20	1 in 100, (mapping accuracy of 99%)
+30	1 in 1,000, (mapping accuracy of 99.9%)
+40	1 in 10,000, (mapping accuracy of 99.99%)
+50	1 in 100,000, (mapping accuracy of 99.999%)
+
+<Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.final.sam awk '{if($5>=30)print$0}' >> Handley_A2682_54325_Wilen_1_5405_RECTUM_read_hits_highqual.sam
+
+<Handley_A2683_54324_Wilen_2_5374_mappings.final.sam awk '{if($5>=30)print$0}' >> Handley_A2683_54324_Wilen_2_5374_read_hits_highqual.sam
+
+<Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.final.sam awk '{if($5>=30)print$0}' >> Handley_A2684_54323_Wilen_3_5897_RECTUM_read_hits_highqual.sam
+
+<Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_mappings.final.sam awk '{if($5>=30)print$0}' >> Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_read_hits_highqual.sam
+
+<Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_mappings.final.sam awk '{if($5>=30)print$0}' >> Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_read_hits_highqual.sam
+
+<Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.final.sam awk '{if($5>=30)print$0}' >> Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_read_hits_highqual.sam
+
+<Handley_A2688_54319_Wilen_7_FS12_mappings.final.sam awk '{if($5>=30)print$0}' >> Handley_A2688_54319_Wilen_7_FS12_read_hits_highqual.sam
+
+<Handley_A2689_54318_Wilen_8_FS12_mappings.final.sam awk '{if($5>=30)print$0}' >> Handley_A2689_54318_Wilen_8_FS12_read_hits_highqual.sam
+
+<Handley_A2690_54317_Wilen_9_mappings.final.sam awk '{if($5>=30)print$0}' >> Handley_A2690_54317_Wilen_9_read_hits_highqual.sam
+
+rsync -avh ./*_read_hits_highqual.sam htcf:/scratch/sahlab/kathie/willen_covid_hunt/
+
+1F.  Parse for regions covered:
+    "colors": {
+      "orf1ab": "#cd0066",
+      "S": "#ff7f50",
+      "ORF3a": "#FF8C00",
+      "E": "#CD950C",
+      "M": "#00FF00",
+      "ORF6": "#006400",
+      "ORF7a": "#00BFFF",
+      "ORF8": "#00008B",
+      "N": "#8A2BE2",
+      "ORF10": "#000000"
+    },
+
+1G.  Commands to Add MN908947.3 to snpEff
+
+  # 1. Navigate to your working directory
+  cd /scratch/sahlab/kathie/willen_covid_hunt
+
+  # 2. Activate conda environment
+  source /ref/sahlab/software/miniforge3/bin/activate
+  conda activate viral_genomics
+
+  # 3. Set snpEff environment variables
+  export SNPEFF_HOME=/ref/sahlab/software/snpEff
+  export SNPEFF_DATA=${SNPEFF_HOME}/data
+  export SNPEFF_JAR=${SNPEFF_HOME}/snpEff.jar
+
+  # 4. Clone VICAST if not already present
+  git clone https://github.com/mihinduk/VICAST.git
+
+  # 5. Check if MN908947.3 is already in snpEff
+  cd VICAST/vicast-annotate
+  python3 step0_check_snpeff.py MN908947.3
+
+Genome is already available in SnpEff!
+You can use it directly:
+  snpeff MN908947.3 your_variants.vcf > annotated.vcf
+
+  # 6. If not present, add it using the master controller
+  # This will automatically determine the best pathway and add it
+  python3 vicast_annotate.py MN908947.3
+
+1H.  Visualize:
+  1. Script Created: plot_coverage_map.py
+
+  Key Features:
+  - Parses simplified 5-column SAM format (id, flag, contig, position, mapping_qual)
+  - MAPQ filtering with --min-mapq parameter (default: 30)
+  - Visualizes entire genome including 5' and 3' UTR regions
+  - Gene annotations with custom colors
+  - 50X depth reference line
+  - Outputs both PNG (300 DPI) and PDF formats
+
+  Filtering Statistics Reported:
+  - Total reads processed
+  - Reads filtered by unmapped flag
+  - Reads filtered by MAPQ threshold
+  - Coverage statistics (min/max positions, depth)
+
+  2. Commands for HTCF
+
+  Add MN908947.3 to snpEff:
+
+  cd /scratch/sahlab/kathie/willen_covid_hunt
+
+  # Activate environment
+  source /ref/sahlab/software/miniforge3/bin/activate
+  conda activate viral_genomics
+
+  # Set snpEff variables
+  export SNPEFF_HOME=/ref/sahlab/software/snpEff
+  export SNPEFF_DATA=${SNPEFF_HOME}/data
+  export SNPEFF_JAR=${SNPEFF_HOME}/snpEff.jar
+
+  # Clone VICAST
+  git clone https://github.com/mihinduk/VICAST.git
+  cd VICAST/vicast-annotate
+
+  # Check if already in snpEff
+  python3 step0_check_snpeff.py MN908947.3
+
+  # If not present, add it
+  python3 vicast_annotate.py MN908947.3
+
+  Generate Coverage Maps:
+
+  # Default (MAPQ ≥ 30)
+
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Willen_artic/Artic_Pool_Nov2025"
+scp "/Users/handley_lab/Handley Lab Dropbox/virome/Willen_artic/Artic_Pool_Nov2025/plot_coverage_map.py" \
+      htcf:/scratch/sahlab/kathie/willen_covid_hunt/
+
+  python3 plot_coverage_map.py Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 30
+
+  # High stringency (MAPQ ≥ 60)
+  python3 plot_coverage_map.py Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 60
+
+  # Lower stringency (MAPQ ≥ 20)
+  python3 plot_coverage_map.py Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 20
+
+  3. MAPQ Recommendations
+
+  - MAPQ ≥ 60: Most stringent, uniquely mapped only
+  - MAPQ ≥ 30: Recommended default, high quality (~99.9% accuracy)
+  - MAPQ ≥ 20: Relaxed, good quality (~99% accuracy)
+  - MAPQ ≥ 10: Permissive, acceptable quality
+
+
+
+ python3 plot_coverage_map.py Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 30
+
+ python3 plot_coverage_map.py Handley_A2683_54324_Wilen_2_5374_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 30
+
+ python3 plot_coverage_map.py Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 30
+
+ python3 plot_coverage_map.py Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 30
+
+ python3 plot_coverage_map.py Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 30
+
+ python3 plot_coverage_map.py Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 30
+
+ python3 plot_coverage_map.py Handley_A2688_54319_Wilen_7_FS12_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 30
+
+ python3 plot_coverage_map.py Handley_A2689_54318_Wilen_8_FS12_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 30
+
+ python3 plot_coverage_map.py Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam --accession MN908947.3 --min-mapq 30
+
+
+
+  4.  Return:
+rsync -avh htcf:/scratch/sahlab/kathie/willen_covid_hunt/*nonsupplemental_coverage.png .
+rsync -avh htcf:/scratch/sahlab/kathie/willen_covid_hunt/*nonsupplemental_coverage.pdf .
+
+
+python3 calculate_median_mapped_length.py < Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental.sam
+
+python3 calculate_median_mapped_length.py < Handley_A2683_54324_Wilen_2_5374_mappings.nonsupplemental.sam
+
+python3 calculate_median_mapped_length.py < Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental.sam
+
+python3 calculate_median_mapped_length.py < Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_mappings.nonsupplemental.sam
+
+python3 calculate_median_mapped_length.py < Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_mappings.nonsupplemental.sam
+
+python3 calculate_median_mapped_length.py < Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental.sam
+
+python3 calculate_median_mapped_length.py < Handley_A2688_54319_Wilen_7_FS12_mappings.nonsupplemental.sam
+
+python3 calculate_median_mapped_length.py < Handley_A2689_54318_Wilen_8_FS12_mappings.nonsupplemental.sam
+
+python3 calculate_median_mapped_length.py < Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam
+
+
+rsync -avh kathiem@10.39.174.195:/mnt/pathogen2/kathie/Artic_Pool_Nov2025/artic_results/2025_11_covid_combined.fa .
+
+
+Summary: Willen_ARTIC_MiSeq_i100_MD_327_troubleshooting.key
+- sent to SH
+
