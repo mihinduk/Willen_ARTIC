@@ -702,3 +702,672 @@ rsync -avh kathiem@10.39.174.195:/mnt/pathogen2/kathie/Artic_Pool_Nov2025/artic_
 Summary: Willen_ARTIC_MiSeq_i100_MD_327_troubleshooting.key
 - sent to SH
 
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+
+Per Scott:
+if you can check on the primers
+
+maybe it is only one plate of primers that worked
+
+see if there are any 'codes' in the primer names or something that might be diagnostic here
+
+cd /scratch/sahlab/kathie/willen_covid_hunt
+rsync -avh kathiem@10.39.174.195:/mnt/pathogen2/kathie/artic_resources/ARTIC-V1.bed .
+
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Willen_artic/Artic_Pool_Nov2025"
+rsync ./bed_to_primer_fasta.py htcf:/scratch/sahlab/kathie/willen_covid_hunt
+
+source /ref/sahlab/software/miniforge3/bin/activate
+conda activate viral_genomics
+
+python3 bed_to_primer_fasta.py 
+
+ nCoV-2019.reference.fasta > artic_primers.fasta
+
+# Method A: Cutadapt (fastest, most robust)
+
+cd /scratch/sahlab/kathie/willen_covid_hunt
+conda activate cutadapt
+
+  cutadapt -g file:artic_primers.fasta \
+      -e 0.05 \
+      --discard-untrimmed \
+      --info-file primer_info.txt \
+      -o /dev/null \
+      sample_R1.fastq.gz \
+      2> primer_stats.txt
+
+Handley_A2690_54317_Wilen_9_FS12:
+  # R1
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2690_54317_Wilen_9_FS12_R1_primer_info.txt \
+        -o /dev/null \
+        Handley_A2690_54317_Wilen_9_FS12-07825_MGI_IDT_10nt_UDIUMI_1057_AACCAGGAGA_ACGAAGCGAT_S40_R1_001.fastq.gz
+
+  # R2 
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2690_54317_Wilen_9_FS12_R2_primer_info.txt \
+        -o /dev/null \
+        Handley_A2690_54317_Wilen_9_FS12-07825_MGI_IDT_10nt_UDIUMI_1057_AACCAGGAGA_ACGAAGCGAT_S40_R2_001.fastq.gz
+
+3. Analyze which primers were found
+  # Count which primers were found (column 8 has primer name)
+  cut -f8 Handley_A2690_54317_Wilen_9_FS12_R1_primer_info.txt | sort | uniq -c | sort -rn > Handley_A2690_54317_Wilen_9_FS12_primer_counts_R1.txt
+
+# Identify missing primers
+cut -f8 Handley_A2690_54317_Wilen_9_FS12_R1_primer_info.txt | grep -v "^$" | sort -u | wc -l
+208
+
+cut -f8 Handley_A2690_54317_Wilen_9_FS12_R1_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2690_54317_Wilen_9_FS12_R1_primers_MISSING.txt
+
+=== MISSING PRIMERS R1 ===
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_53_RIGHT
+nCoV-2019_58_RIGHT
+nCoV-2019_63_LEFT
+nCoV-2019_91_LEFT
+nCoV-2019_91_RIGHT
+nCoV-2019_92_LEFT
+
+cut -f8 Handley_A2690_54317_Wilen_9_FS12_R2_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2690_54317_Wilen_9_FS12_R2_primers_MISSING.txt
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_45_RIGHT
+nCoV-2019_53_RIGHT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_91_LEFT
+nCoV-2019_92_LEFT
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+
+Handley_A2683_54324_Wilen_2_5374:
+  # R1
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2683_54324_Wilen_2_5374_R1_primer_info.txt \
+        -o /dev/null \
+        Handley_A2683_54324_Wilen_2_5374-COVID-CRYO_MGI_IDT_10nt_UDIUMI_1039_AACCAACCAA_CCTGCACTTC_S33_R1_001.fastq.gz
+
+cut -f8 Handley_A2683_54324_Wilen_2_5374_R1_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2683_54324_Wilen_2_FS12_R1_primers_MISSING.txt
+
+=== MISSING PRIMERS R1 ===
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_92_LEFT
+
+
+  # R2 
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2683_54324_Wilen_2_5374_R2_primer_info.txt \
+        -o /dev/null \
+        Handley_A2683_54324_Wilen_2_5374-COVID-CRYO_MGI_IDT_10nt_UDIUMI_1039_AACCAACCAA_CCTGCACTTC_S33_R2_001.fastq.gz
+
+cut -f8 Handley_A2683_54324_Wilen_2_5374_R2_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2683_54324_Wilen_2_FS12_R2_primers_MISSING.txt
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_38_LEFT
+nCoV-2019_92_LEFT
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Handley_A2682_54325_Wilen_1_5405_RECTUM:
+
+  # R1
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2682_54325_Wilen_1_5405-RECTUM_R1_primer_info.txt \
+        -o /dev/null \
+        Handley_A2682_54325_Wilen_1_5405-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1038_AGACTGATCA_ACAACCACCA_S32_R1_001.fastq.gz
+
+cut -f8 Handley_A2682_54325_Wilen_1_5405-RECTUM_R1_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > HHandley_A2682_54325_Wilen_1_5405-RECTUM_R1_primers_MISSING.txt
+
+=== MISSING PRIMERS R1 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_40_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_53_RIGHT
+nCoV-2019_55_RIGHT
+nCoV-2019_60_LEFT
+nCoV-2019_74_RIGHT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_88_RIGHT
+nCoV-2019_92_LEFT
+
+
+  # R2 
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2682_54325_Wilen_1_5405-RECTUM_R2_primer_info.txt \
+        -o /dev/null \
+        Handley_A2682_54325_Wilen_1_5405-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1038_AGACTGATCA_ACAACCACCA_S32_R2_001.fastq.gz
+
+cut -f8 Handley_A2682_54325_Wilen_1_5405-RECTUM_R2_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2682_54325_Wilen_1_5405-RECTUM_R2_primers_MISSING.txt
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_28_RIGHT
+nCoV-2019_38_LEFT
+nCoV-2019_42_RIGHT
+nCoV-2019_43_LEFT
+nCoV-2019_45_RIGHT
+nCoV-2019_53_RIGHT
+nCoV-2019_60_LEFT
+nCoV-2019_85_RIGHT
+nCoV-2019_87_LEFT
+nCoV-2019_88_RIGHT
+nCoV-2019_91_RIGHT
+
+
+
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Handley_A2684_54323_Wilen_3_5897_RECTUM:
+  # R1
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2684_54323_Wilen_3_5897_RECTUM_R1_primer_info.txt \
+        -o /dev/null \
+        Handley_A2684_54323_Wilen_3_5897-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1040_CAATTGCCGG_GCTTGTTGAA_S34_R1_001.fastq.gz
+
+cut -f8 Handley_A2684_54323_Wilen_3_5897_RECTUM_R1_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2683_54324_Wilen_2_FS12_R1_primers_MISSING.txt
+
+=== MISSING PRIMERS R1 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_40_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_53_RIGHT
+nCoV-2019_55_RIGHT
+nCoV-2019_60_LEFT
+nCoV-2019_74_RIGHT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_88_RIGHT
+nCoV-2019_92_LEFT
+
+
+  # R2 
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2684_54323_Wilen_3_5897_RECTUM_R2_primer_info.txt \
+        -o /dev/null \
+        Handley_A2684_54323_Wilen_3_5897-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1040_CAATTGCCGG_GCTTGTTGAA_S34_R2_001.fastq.gz
+
+cut -f8 Handley_A2684_54323_Wilen_3_5897_RECTUM_R2_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2683_54324_Wilen_2_FS12_R2_primers_MISSING.txt
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_28_RIGHT
+nCoV-2019_38_LEFT
+nCoV-2019_42_RIGHT
+nCoV-2019_43_LEFT
+nCoV-2019_45_RIGHT
+nCoV-2019_53_RIGHT
+nCoV-2019_60_LEFT
+nCoV-2019_85_RIGHT
+nCoV-2019_87_LEFT
+nCoV-2019_88_RIGHT
+nCoV-2019_91_RIGHT
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Handley_A2684_54323_Wilen_3_5897_RECTUM:
+  # R1
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2684_54323_Wilen_3_5897_RECTUM_R1_primer_info.txt \
+        -o /dev/null \
+        Handley_A2684_54323_Wilen_3_5897-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1040_CAATTGCCGG_GCTTGTTGAA_S34_R1_001.fastq.gz
+
+cut -f8 Handley_A2684_54323_Wilen_3_5897_RECTUM_R1_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2684_54323_Wilen_3_5897_RECTUM_R1_primers_MISSING.txt
+
+=== MISSING PRIMERS R1 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_LEFT_alt2
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_33_LEFT
+nCoV-2019_38_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_45_RIGHT
+nCoV-2019_46_LEFT
+nCoV-2019_52_LEFT
+nCoV-2019_58_RIGHT
+nCoV-2019_63_LEFT
+nCoV-2019_74_RIGHT
+nCoV-2019_75_RIGHT
+nCoV-2019_80_LEFT
+nCoV-2019_85_RIGHT
+nCoV-2019_91_LEFT
+nCoV-2019_91_RIGHT
+nCoV-2019_92_LEFT
+nCoV-2019_95_LEFT
+
+
+  # R2 
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2684_54323_Wilen_3_5897_RECTUM_R2_primer_info.txt \
+        -o /dev/null \
+        Handley_A2684_54323_Wilen_3_5897-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1040_CAATTGCCGG_GCTTGTTGAA_S34_R2_001.fastq.gz
+
+cut -f8 Handley_A2684_54323_Wilen_3_5897_RECTUM_R2_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2684_54323_Wilen_3_5897_RECTUM_R2_primers_MISSING.txt
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_31_RIGHT
+nCoV-2019_32_LEFT
+nCoV-2019_33_LEFT
+nCoV-2019_38_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_45_RIGHT
+nCoV-2019_46_LEFT
+nCoV-2019_60_LEFT
+nCoV-2019_63_LEFT
+nCoV-2019_64_RIGHT
+nCoV-2019_75_RIGHT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_87_LEFT
+nCoV-2019_90_RIGHT
+nCoV-2019_91_LEFT
+nCoV-2019_91_RIGHT
+nCoV-2019_92_LEFT
+nCoV-2019_95_LEFT
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM:
+  # R1
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_R1_primer_info.txt \
+        -o /dev/null \
+        Handley_A2685_54322_Wilen_4_COVID-5323-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1041_GCTACAGGTC_GAGAGGTAAT_S35_R1_001.fastq.gz
+
+cut -f8 Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_R1_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_R1_primers_MISSING.txt
+
+=== MISSING PRIMERS R1 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_33_LEFT
+nCoV-2019_36_LEFT
+nCoV-2019_38_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_53_RIGHT
+nCoV-2019_55_RIGHT
+nCoV-2019_58_RIGHT
+nCoV-2019_60_RIGHT
+nCoV-2019_61_LEFT
+nCoV-2019_63_LEFT
+nCoV-2019_68_LEFT
+nCoV-2019_70_RIGHT
+nCoV-2019_74_RIGHT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_88_RIGHT
+nCoV-2019_89_LEFT_alt2
+nCoV-2019_91_LEFT
+nCoV-2019_91_RIGHT
+nCoV-2019_92_LEFT
+
+
+  # R2 
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_R2_primer_info.txt \
+        -o /dev/null \
+        Handley_A2685_54322_Wilen_4_COVID-5323-RECTUM-CRYO-PRESERVE_MGI_IDT_10nt_UDIUMI_1041_GCTACAGGTC_GAGAGGTAAT_S35_R2_001.fastq.gz
+
+cut -f8 Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_R2_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_R2_primers_MISSING.txt
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_29_LEFT
+nCoV-2019_33_LEFT
+nCoV-2019_38_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_45_RIGHT
+nCoV-2019_53_LEFT
+nCoV-2019_53_RIGHT
+nCoV-2019_55_RIGHT
+nCoV-2019_58_RIGHT
+nCoV-2019_60_LEFT
+nCoV-2019_68_LEFT
+nCoV-2019_75_RIGHT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_82_LEFT
+nCoV-2019_88_RIGHT
+nCoV-2019_90_RIGHT
+nCoV-2019_91_LEFT
+nCoV-2019_91_RIGHT
+nCoV-2019_92_LEFT
+nCoV-2019_95_LEFT
+
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM:
+  # R1
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_R1_primer_info.txt \
+        -o /dev/null \
+        Handley_A2686_54321_Wilen_5_LIINC-5104-RECTUM_MGI_IDT_10nt_UDIUMI_1042_TCGGTGGAAC_TATGTGAGGT_S36_R1_001.fastq.gz
+
+cut -f8 Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_R1_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_R1_primers_MISSING.txt
+
+=== MISSING PRIMERS R1 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_32_LEFT
+nCoV-2019_38_LEFT
+nCoV-2019_40_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_45_RIGHT
+nCoV-2019_53_LEFT
+nCoV-2019_53_RIGHT
+nCoV-2019_55_RIGHT
+nCoV-2019_58_RIGHT
+nCoV-2019_60_LEFT
+nCoV-2019_63_LEFT
+nCoV-2019_68_LEFT
+nCoV-2019_85_RIGHT
+nCoV-2019_87_LEFT
+nCoV-2019_88_RIGHT
+nCoV-2019_91_LEFT
+nCoV-2019_92_LEFT
+nCoV-2019_95_LEFT
+
+  # R2 
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_R2_primer_info.txt \
+        -o /dev/null \
+        Handley_A2686_54321_Wilen_5_LIINC-5104-RECTUM_MGI_IDT_10nt_UDIUMI_1042_TCGGTGGAAC_TATGTGAGGT_S36_R2_001.fastq.gz
+
+cut -f8 Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_R2_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_R2_primers_MISSING.txt
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_31_RIGHT
+nCoV-2019_32_LEFT
+nCoV-2019_33_LEFT
+nCoV-2019_38_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_45_RIGHT
+nCoV-2019_46_LEFT
+nCoV-2019_60_LEFT
+nCoV-2019_63_LEFT
+nCoV-2019_64_RIGHT
+nCoV-2019_75_RIGHT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_87_LEFT
+nCoV-2019_90_RIGHT
+nCoV-2019_91_LEFT
+nCoV-2019_91_RIGHT
+nCoV-2019_92_LEFT
+nCoV-2019_95_LEFT
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM:
+  # R1
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_R1_primer_info.txt \
+        -o /dev/null \
+        Handley_A2687_54320_Wilen_6_LIINC-5104-ILEUM_MGI_IDT_10nt_UDIUMI_1047_AGGTGAACGG_TACTCTGACA_S37_R1_001.fastq.gz
+
+cut -f8 Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_R1_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_R1_primers_MISSING.txt
+
+=== MISSING PRIMERS R1 ===
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_38_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_53_RIGHT
+nCoV-2019_58_RIGHT
+nCoV-2019_60_LEFT
+nCoV-2019_63_LEFT
+nCoV-2019_63_RIGHT
+nCoV-2019_74_RIGHT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_87_LEFT
+nCoV-2019_88_RIGHT
+nCoV-2019_91_LEFT
+nCoV-2019_92_LEFT
+
+  # R2 
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_R2_primer_info.txt \
+        -o /dev/null \
+        Handley_A2687_54320_Wilen_6_LIINC-5104-ILEUM_MGI_IDT_10nt_UDIUMI_1047_AGGTGAACGG_TACTCTGACA_S37_R2_001.fastq.gz
+
+cut -f8 Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_R2_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_R2_primers_MISSING.txt
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_38_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_45_RIGHT
+nCoV-2019_53_RIGHT
+nCoV-2019_63_LEFT
+nCoV-2019_74_RIGHT
+nCoV-2019_75_RIGHT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_80_LEFT
+nCoV-2019_90_LEFT
+nCoV-2019_91_LEFT
+nCoV-2019_92_LEFT
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Handley_A2688_54319_Wilen_7_FS12:
+  # R1
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2688_54319_Wilen_7_FS12_R1_primer_info.txt \
+        -o /dev/null \
+        Handley_A2688_54319_Wilen_7_FS12-07815_MGI_IDT_10nt_UDIUMI_1049_AAGATACAGC_CGTATAGACA_S38_R1_001.fastq.gz
+
+cut -f8 Handley_A2688_54319_Wilen_7_FS12_R1_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2688_54319_Wilen_7_FS12_R1_primers_MISSING.txt
+
+=== MISSING PRIMERS R1 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_53_RIGHT
+nCoV-2019_60_LEFT
+nCoV-2019_87_LEFT
+nCoV-2019_90_LEFT
+nCoV-2019_91_LEFT
+
+  # R2 
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2688_54319_Wilen_7_FS12_R2_primer_info.txt \
+        -o /dev/null \
+        Handley_A2688_54319_Wilen_7_FS12-07815_MGI_IDT_10nt_UDIUMI_1049_AAGATACAGC_CGTATAGACA_S38_R2_001.fastq.gz
+
+cut -f8 Handley_A2688_54319_Wilen_7_FS12_R2_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2688_54319_Wilen_7_FS12_R2_primers_MISSING.txt
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_14_LEFT
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_53_RIGHT
+nCoV-2019_60_LEFT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_88_RIGHT
+nCoV-2019_92_LEFT
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Handley_A2689_54318_Wilen_8_FS12:
+  # R1
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2689_54318_Wilen_8_FS12_R1_primer_info.txt \
+        -o /dev/null \
+        Handley_A2689_54318_Wilen_8_FS12-07824_MGI_IDT_10nt_UDIUMI_1055_TCAGTAGCAG_TCCGTCGCTA_S39_R1_001.fastq.gz
+
+cut -f8 Handley_A2689_54318_Wilen_8_FS12_R1_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2689_54318_Wilen_8_FS12_R1_primers_MISSING.txt
+
+=== MISSING PRIMERS R1 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_43_LEFT
+nCoV-2019_53_RIGHT
+nCoV-2019_63_LEFT
+nCoV-2019_74_RIGHT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_88_RIGHT
+nCoV-2019_91_LEFT
+nCoV-2019_92_LEFT
+
+  # R2 
+  cutadapt -g file:artic_primers.fasta \
+        -e 0.05 \
+        --discard-untrimmed \
+        --info-file Handley_A2689_54318_Wilen_8_FS12_R2_primer_info.txt \
+        -o /dev/null \
+        Handley_A2689_54318_Wilen_8_FS12-07824_MGI_IDT_10nt_UDIUMI_1055_TCAGTAGCAG_TCCGTCGCTA_S39_R2_001.fastq.gz
+
+cut -f8 Handley_A2689_54318_Wilen_8_FS12_R2_primer_info.txt | grep -v "^$" | sort -u > primers_found.txt
+grep ">" artic_primers.fasta | sed 's/>//' | awk '{print $1}' | sort > primers_expected.txt
+
+comm -23 primers_expected.txt primers_found.txt > Handley_A2689_54318_Wilen_8_FS12_R2_primers_MISSING.txt
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_14_LEFT
+nCoV-2019_18_RIGHT_alt1
+nCoV-2019_21_LEFT_alt2
+nCoV-2019_25_LEFT
+nCoV-2019_38_LEFT
+nCoV-2019_76_LEFT_alt3
+nCoV-2019_88_RIGHT
+nCoV-2019_91_LEFT
+nCoV-2019_92_LEFT
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Missing Across ALL Samples
+=== MISSING PRIMERS R1 ===
+nCoV-2019_18_RIGHT_alt1
+
+
+=== MISSING PRIMERS R2 ===
+nCoV-2019_18_RIGHT_alt1
+
