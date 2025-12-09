@@ -1371,3 +1371,1407 @@ nCoV-2019_18_RIGHT_alt1
 === MISSING PRIMERS R2 ===
 nCoV-2019_18_RIGHT_alt1
 
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+  You can now share this link with your boss: https://github.com/mihinduk/Willen_ARTIC/tree/main/Artic_Pool_Nov2025
+
+  Veritas numquam perit! ✨
+
+> Benigne
+
+⏺ Gratias tibi ago! 🙏
+
+  It was a pleasure working through this analysis with you. The systematic approach you took - questioning assumptions, catching the coverage inflation issue, and insisting on accurate CIGAR-based
+  calculations - is exactly the kind of rigorous science that prevents errors from propagating.
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Post-mtg questions from Scott: YAH
+ - We need to try to filter out reads with mapped regions  below a set length (150, 175, 200 and 250 bp tests) - should we do this by parsing the SAM file to begin with and IF it looks worthwhile, tweak the original bwa-mem parameters?
+
+3. Generate coverage maps for each to compare:
+test_length_filters.sh
+
+sh test_length_filters.sh Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental.sam
+
+sh test_length_filters.sh Handley_A2683_54324_Wilen_2_5374_mappings.nonsupplemental.sam
+
+sh test_length_filters.sh Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental.sam
+
+sh test_length_filters.sh Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_mappings.nonsupplemental.sam
+
+sh test_length_filters.sh Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_mappings.nonsupplemental.sam
+
+sh test_length_filters.sh Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental.sam
+
+sh test_length_filters.sh Handley_A2688_54319_Wilen_7_FS12_mappings.nonsupplemental.sam
+
+sh test_length_filters.sh Handley_A2689_54318_Wilen_8_FS12_mappings.nonsupplemental.sam
+
+sh test_length_filters.sh Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam
+
+rsync -avh htcf:/scratch/sahlab/kathie/willen_covid_hunt/*_mappings.nonsupplemental_min* .
+
+4.  Depth stats:
+4A.  Summary statistics only:
+python3 extract_depth_stats.py input.sam --genome-length 29903
+
+python3 extract_depth_stats.py Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental_min150.sam --genome-length 29903 > Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental_min150_depth.txt
+python3 extract_depth_stats.py Handley_A2683_54324_Wilen_2_5374_mappings.nonsupplemental_min150.sam --genome-length 29903 > Handley_A2683_54324_Wilen_2_5374_mappings.nonsupplemental_min150_depth.txt
+python3 extract_depth_stats.py Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental_min150.sam --genome-length 29903 > Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental_min150_depth.txt
+
+python3 extract_depth_stats.py Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_mappings.nonsupplemental_min150.sam --genome-length 29903 > Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_mappings.nonsupplemental_min150_depth.txt
+python3 extract_depth_stats.py Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_mappings.nonsupplemental_min150.sam --genome-length 29903 > Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_mappings.nonsupplemental_min150_depth.txt
+python3 extract_depth_stats.py Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental_min150.sam --genome-length 29903 > Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental_min150_depth.txt
+
+python3 extract_depth_stats.py Handley_A2688_54319_Wilen_7_FS12_mappings.nonsupplemental_min150.sam --genome-length 29903 > Handley_A2688_54319_Wilen_7_FS12_mappings.nonsupplemental_min150_depth.txt
+python3 extract_depth_stats.py Handley_A2689_54318_Wilen_8_FS12_mappings.nonsupplemental_min150.sam --genome-length 29903 > Handley_A2689_54318_Wilen_8_FS12_mappings.nonsupplemental_min150_depth.txt
+python3 extract_depth_stats.py Handley_A2690_54317_Wilen_9_mappings.nonsupplemental_min150.sam --genome-length 29903 > Handley_A2690_54317_Wilen_9_mappings.nonsupplemental_min150_depth.txt
+
+rsync -avh htcf:/scratch/sahlab/kathie/willen_covid_hunt/*_mappings.nonsupplemental_min150_depth.txt .
+
+ python3 extract_depth_stats.py Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental_min150.sam \
+      --genome-length 29903 \
+      --min-depth 50 \
+      --output-depths Wilen_1_min150_depths.tsv
+
+ python3 extract_depth_stats.py Handley_A2683_54324_Wilen_2_5374_mappings.nonsupplemental_min150.sam \
+      --genome-length 29903 \
+      --min-depth 50 \
+      --output-depths Wilen_2_min150_depths.tsv
+
+ python3 extract_depth_stats.py Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental_min150.sam \
+      --genome-length 29903 \
+      --min-depth 50 \
+      --output-depths Wilen_3_min150_depths.tsv
+
+ python3 extract_depth_stats.py Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_mappings.nonsupplemental_min150.sam \
+      --genome-length 29903 \
+      --min-depth 50 \
+      --output-depths Wilen_4_min150_depths.tsv
+
+ python3 extract_depth_stats.py Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_mappings.nonsupplemental_min150.sam \
+      --genome-length 29903 \
+      --min-depth 50 \
+      --output-depths Wilen_5_min150_depths.tsv
+
+ python3 extract_depth_stats.py Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental_min150.sam \
+      --genome-length 29903 \
+      --min-depth 50 \
+      --output-depths Wilen_6_min150_depths.tsv
+
+ python3 extract_depth_stats.py Handley_A2688_54319_Wilen_7_FS12_mappings.nonsupplemental_min150.sam \
+      --genome-length 29903 \
+      --min-depth 50 \
+      --output-depths Wilen_7_min150_depths.tsv
+
+ python3 extract_depth_stats.py Handley_A2689_54318_Wilen_8_FS12_mappings.nonsupplemental_min150.sam \
+      --genome-length 29903 \
+      --min-depth 50 \
+      --output-depths Wilen_8_min150_depths.tsv
+
+ python3 extract_depth_stats.py Handley_A2690_54317_Wilen_9_mappings.nonsupplemental_min150.sam \
+      --genome-length 29903 \
+      --min-depth 50 \
+      --output-depths Wilen_9_min150_depths.tsv
+
+
+rsync -avh htcf:/scratch/sahlab/kathie/willen_covid_hunt/*_min150_depths.tsv .
+
+# Show only non-zero depths
+awk '$2 != 0' Wilen_1_min150_depths.tsv > Wilen_1_min150_depths_nonzero.tsv
+awk '$2 != 0' Wilen_2_min150_depths.tsv > Wilen_2_min150_depths_nonzero.tsv
+awk '$2 != 0' Wilen_3_min150_depths.tsv > Wilen_3_min150_depths_nonzero.tsv
+
+awk '$2 != 0' Wilen_4_min150_depths.tsv > Wilen_4_min150_depths_nonzero.tsv
+awk '$2 != 0' Wilen_5_min150_depths.tsv > Wilen_5_min150_depths_nonzero.tsv
+awk '$2 != 0' Wilen_6_min150_depths.tsv > Wilen_6_min150_depths_nonzero.tsv
+
+awk '$2 != 0' Wilen_7_min150_depths.tsv > Wilen_7_min150_depths_nonzero.tsv
+awk '$2 != 0' Wilen_8_min150_depths.tsv > Wilen_8_min150_depths_nonzero.tsv
+awk '$2 != 0' Wilen_9_min150_depths.tsv > Wilen_9_min150_depths_nonzero.tsv
+
+rsync -avh htcf:/scratch/sahlab/kathie/willen_covid_hunt/*_min150_depths_nonzero.tsv .
+
+Sample	Positions with at least 1 read
+1	27201 - 27603
+2	NA
+3	26593 - 27010
+4	NA
+5	NA
+6	NA
+7	NA
+8	NA
+9	15017 - 15416; 27201 - 27603
+
+YAH
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** 
+ - We also need to find out WHAT is in the minimal 19 bp matches - all the same thing OR was this set as a minimum length during the pipeline? YAH
+Current BWA-MEM Parameters (Line 343-493)
+
+  Your command:
+  bwa mem -t 12 nCoV-2019.reference.fasta R1.fastq.gz R2.fastq.gz
+
+  NO alignment parameters specified = using BWA-MEM defaults:
+
+  | Parameter | Default | Meaning                                        |
+  |-----------|---------|------------------------------------------------|
+  | -k        | 19      | Minimum seed length - THIS IS YOUR 19bp!       |
+  | -w        | 100     | Band width                                     |
+  | -A        | 1       | Match score                                    |
+  | -B        | 4       | Mismatch penalty                               |
+  | -O        | 6,6     | Gap open penalty (allows insertions/deletions) |
+  | -E        | 1,1     | Gap extension penalty                          |
+  | -T        | 30      | Minimum alignment score                        |
+  | -L        | 5,5     | Clipping penalty                               |
+
+
+1. Investigate what's in the short alignments
+1A.  Content of 19 bp alignments:
+rsync -avh ./extract_19bp_sequences.py htcf:/scratch/sahlab/kathie/willen_covid_hunt/
+
+python3 extract_19bp_sequences.py Handley_A2683_54324_Wilen_2_5374_mappings.nonsupplemental.sam Wilen_2_19bp
+
+python3 extract_19bp_sequences.py Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam Wilen_9_19bp
+
+rsync -avh htcf:/scratch/sahlab/kathie/willen_covid_hunt/*_19bp_*fasta .
+rsync -avh htcf:/scratch/sahlab/kathie/willen_covid_hunt/artic_primers.fasta .
+
+Per blastn:
+- vs primers:
+   2/50 (Sample 9) or 1/50 (Sample 2) are primers (required 17 of 19 match)
+
+- vs nt:
+  - 50/50 (Sample 9) or 50/50 (Sample 2) are COVID (100% match over 100% length)
+
+1B.  QC:
+source /ref/sahlab/software/miniforge3/bin/activate
+conda activate viral_genomics
+
+python3 analyze_short_alignments.py Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental.sam 19 30 > Handley_A2682_54325_Wilen_1_5405_RECTUM_short_alignment_report.txt
+
+============================================================
+SUMMARY
+============================================================
+Total reads processed: 245,704
+Reads with 19-30bp mapped: 124,611 (50.72%)
+
+============================================================
+MAPQ Distribution
+============================================================
+MAPQ 60: 16,888 reads (13.6%)
+MAPQ 59:      5 reads (0.0%)
+MAPQ 58:    252 reads (0.2%)
+MAPQ 57:  1,073 reads (0.9%)
+MAPQ 56:      6 reads (0.0%)
+MAPQ 55:      2 reads (0.0%)
+MAPQ 54:    705 reads (0.6%)
+MAPQ 53:      1 reads (0.0%)
+MAPQ 52:    147 reads (0.1%)
+MAPQ 51:    575 reads (0.5%)
+MAPQ 50:     87 reads (0.1%)
+MAPQ 49:      2 reads (0.0%)
+MAPQ 48:  3,067 reads (2.5%)
+MAPQ 47:      2 reads (0.0%)
+MAPQ 46:     83 reads (0.1%)
+MAPQ 45:  3,986 reads (3.2%)
+MAPQ 44:      1 reads (0.0%)
+MAPQ 43:      1 reads (0.0%)
+MAPQ 42: 91,406 reads (73.4%)
+MAPQ 41:      3 reads (0.0%)
+MAPQ 40:    130 reads (0.1%)
+MAPQ 39:    161 reads (0.1%)
+MAPQ 37:      3 reads (0.0%)
+MAPQ 36:  4,704 reads (3.8%)
+MAPQ 35:     72 reads (0.1%)
+MAPQ 33:     73 reads (0.1%)
+MAPQ 32:     19 reads (0.0%)
+MAPQ 30:    501 reads (0.4%)
+MAPQ 28:      3 reads (0.0%)
+MAPQ 27:     58 reads (0.0%)
+MAPQ 26:      4 reads (0.0%)
+MAPQ 24:    242 reads (0.2%)
+MAPQ 23:      2 reads (0.0%)
+MAPQ 21:     59 reads (0.0%)
+MAPQ 20:      2 reads (0.0%)
+MAPQ 19:      2 reads (0.0%)
+MAPQ 18:     80 reads (0.1%)
+MAPQ 17:      1 reads (0.0%)
+MAPQ 16:      6 reads (0.0%)
+MAPQ 15:     14 reads (0.0%)
+MAPQ 13:      1 reads (0.0%)
+MAPQ 12:    101 reads (0.1%)
+MAPQ 11:      1 reads (0.0%)
+MAPQ 10:     40 reads (0.0%)
+MAPQ  9:     12 reads (0.0%)
+MAPQ  6:      6 reads (0.0%)
+MAPQ  5:     11 reads (0.0%)
+MAPQ  3:      3 reads (0.0%)
+MAPQ  0:      8 reads (0.0%)
+
+============================================================
+Genome Position Distribution (1kb bins)
+============================================================
+    0-1,000bp:  2,813 reads
+1,000-2,000bp:    206 reads
+2,000-3,000bp:  2,352 reads
+3,000-4,000bp:    814 reads
+4,000-5,000bp:    125 reads
+5,000-6,000bp: 88,415 reads
+6,000-7,000bp:     36 reads
+7,000-8,000bp:  1,990 reads
+8,000-9,000bp:    359 reads
+9,000-10,000bp:     98 reads
+10,000-11,000bp:    592 reads
+11,000-12,000bp: 17,761 reads
+12,000-13,000bp:     80 reads
+13,000-14,000bp:    248 reads
+14,000-15,000bp:    460 reads
+15,000-16,000bp:     58 reads
+16,000-17,000bp:    129 reads
+17,000-18,000bp:     64 reads
+18,000-19,000bp:     61 reads
+19,000-20,000bp:  1,876 reads
+
+============================================================
+Top 10 CIGAR Patterns
+============================================================
+26M225S             : 48,099 reads
+46S26M179S          : 34,484 reads
+105S26M120S         :  5,600 reads
+25M226S             :  4,613 reads
+221S30M             :  2,915 reads
+15S30M206S          :  2,508 reads
+47S26M178S          :  1,992 reads
+224S27M             :  1,596 reads
+211S25M15S          :  1,334 reads
+222S29M             :  1,051 reads
+
+============================================================
+Sequence Content Analysis
+============================================================
+Illumina_adapter: 59533 sequences (47.8%)
+Poly-A: 33 sequences (0.0%)
+Poly-T: 8 sequences (0.0%)
+Poly-G: 19913 sequences (16.0%)
+Poly-C: 21310 sequences (17.1%)
+
+Poly-G or Poly-C: 41219 sequences (33.1%)
+GC content: 58.8%
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** 
+python3 analyze_short_alignments.py Handley_A2683_54324_Wilen_2_5374_mappings.nonsupplemental.sam 19 30 > Handley_A2683_54324_Wilen_2_5374_short_alignment_report.txt
+
+============================================================
+SUMMARY
+============================================================
+Total reads processed: 721,210
+Reads with 19-30bp mapped: 422,124 (58.53%)
+
+============================================================
+MAPQ Distribution
+============================================================
+MAPQ 60: 151,198 reads (35.8%)
+MAPQ 59:     20 reads (0.0%)
+MAPQ 58:  1,175 reads (0.3%)
+MAPQ 57:  7,416 reads (1.8%)
+MAPQ 56:     56 reads (0.0%)
+MAPQ 55:      4 reads (0.0%)
+MAPQ 54: 13,201 reads (3.1%)
+MAPQ 53:     15 reads (0.0%)
+MAPQ 52:    730 reads (0.2%)
+MAPQ 51:  5,744 reads (1.4%)
+MAPQ 50:    688 reads (0.2%)
+MAPQ 49:      6 reads (0.0%)
+MAPQ 48: 36,014 reads (8.5%)
+MAPQ 47:     33 reads (0.0%)
+MAPQ 46:    374 reads (0.1%)
+MAPQ 45:  4,484 reads (1.1%)
+MAPQ 44:      5 reads (0.0%)
+MAPQ 43:     19 reads (0.0%)
+MAPQ 42: 116,027 reads (27.5%)
+MAPQ 41:    159 reads (0.0%)
+MAPQ 40:    964 reads (0.2%)
+MAPQ 39:  2,834 reads (0.7%)
+MAPQ 38:     10 reads (0.0%)
+MAPQ 37:      5 reads (0.0%)
+MAPQ 36: 58,476 reads (13.9%)
+MAPQ 35:     91 reads (0.0%)
+MAPQ 34:      2 reads (0.0%)
+MAPQ 33:  2,613 reads (0.6%)
+MAPQ 32:     85 reads (0.0%)
+MAPQ 31:      4 reads (0.0%)
+MAPQ 30: 11,067 reads (2.6%)
+MAPQ 29:     18 reads (0.0%)
+MAPQ 28:     24 reads (0.0%)
+MAPQ 27:    574 reads (0.1%)
+MAPQ 26:     46 reads (0.0%)
+MAPQ 25:      1 reads (0.0%)
+MAPQ 24:  4,962 reads (1.2%)
+MAPQ 23:    106 reads (0.0%)
+MAPQ 22:      6 reads (0.0%)
+MAPQ 21:    370 reads (0.1%)
+MAPQ 20:      5 reads (0.0%)
+MAPQ 19:     14 reads (0.0%)
+MAPQ 18:  1,016 reads (0.2%)
+MAPQ 17:      8 reads (0.0%)
+MAPQ 16:     30 reads (0.0%)
+MAPQ 15:    826 reads (0.2%)
+MAPQ 14:      1 reads (0.0%)
+MAPQ 13:      1 reads (0.0%)
+MAPQ 12:    155 reads (0.0%)
+MAPQ 11:      7 reads (0.0%)
+MAPQ 10:    146 reads (0.0%)
+MAPQ  9:     50 reads (0.0%)
+MAPQ  6:     70 reads (0.0%)
+MAPQ  5:     44 reads (0.0%)
+MAPQ  4:      2 reads (0.0%)
+MAPQ  3:     37 reads (0.0%)
+MAPQ  0:     86 reads (0.0%)
+
+============================================================
+Genome Position Distribution (1kb bins)
+============================================================
+    0-1,000bp:  7,322 reads
+1,000-2,000bp:  2,081 reads
+2,000-3,000bp: 21,564 reads
+3,000-4,000bp: 15,340 reads
+4,000-5,000bp:  1,893 reads
+5,000-6,000bp: 100,793 reads
+6,000-7,000bp:  2,171 reads
+7,000-8,000bp: 14,444 reads
+8,000-9,000bp:    559 reads
+9,000-10,000bp:  2,155 reads
+10,000-11,000bp:  8,698 reads
+11,000-12,000bp: 121,682 reads
+12,000-13,000bp:  8,236 reads
+13,000-14,000bp:  3,530 reads
+14,000-15,000bp:  4,655 reads
+15,000-16,000bp:  2,023 reads
+16,000-17,000bp:  4,647 reads
+17,000-18,000bp:    856 reads
+18,000-19,000bp:  4,340 reads
+19,000-20,000bp: 20,119 reads
+
+============================================================
+Top 10 CIGAR Patterns
+============================================================
+26M225S             : 77,360 reads
+25M226S             : 36,296 reads
+221S30M             : 17,645 reads
+30M221S             : 13,676 reads
+27M224S             : 13,614 reads
+37S25M189S          : 12,238 reads
+204S27M20S          : 10,786 reads
+46S26M179S          : 10,080 reads
+15S30M206S          :  9,963 reads
+207S25M19S          :  8,780 reads
+
+============================================================
+Sequence Content Analysis
+============================================================
+Illumina_adapter: 198102 sequences (46.9%)
+Poly-A: 762 sequences (0.2%)
+Poly-T: 65 sequences (0.0%)
+Poly-G: 140037 sequences (33.2%)
+Poly-C: 144233 sequences (34.2%)
+
+Poly-G or Poly-C: 284252 sequences (67.3%)
+GC content: 65.7%
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** 
+python3 analyze_short_alignments.py Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental.sam 19 30 > Handley_A2684_54323_Wilen_3_5897_RECTUM_short_alignment_report.txt
+
+============================================================
+SUMMARY
+============================================================
+Total reads processed: 314,130
+Reads with 19-30bp mapped: 128,829 (41.01%)
+
+============================================================
+MAPQ Distribution
+============================================================
+MAPQ 60: 29,796 reads (23.1%)
+MAPQ 59:      7 reads (0.0%)
+MAPQ 58:    297 reads (0.2%)
+MAPQ 57:  3,424 reads (2.7%)
+MAPQ 56:     12 reads (0.0%)
+MAPQ 55:      8 reads (0.0%)
+MAPQ 54:  2,156 reads (1.7%)
+MAPQ 53:      5 reads (0.0%)
+MAPQ 52:    192 reads (0.1%)
+MAPQ 51:    904 reads (0.7%)
+MAPQ 50:    216 reads (0.2%)
+MAPQ 49:     12 reads (0.0%)
+MAPQ 48:  5,423 reads (4.2%)
+MAPQ 47:      3 reads (0.0%)
+MAPQ 46:     88 reads (0.1%)
+MAPQ 45:  4,989 reads (3.9%)
+MAPQ 43:      7 reads (0.0%)
+MAPQ 42: 68,327 reads (53.0%)
+MAPQ 41:     46 reads (0.0%)
+MAPQ 40:    216 reads (0.2%)
+MAPQ 39:    567 reads (0.4%)
+MAPQ 38:      1 reads (0.0%)
+MAPQ 37:      3 reads (0.0%)
+MAPQ 36:  8,094 reads (6.3%)
+MAPQ 35:     57 reads (0.0%)
+MAPQ 33:    766 reads (0.6%)
+MAPQ 32:     16 reads (0.0%)
+MAPQ 31:      3 reads (0.0%)
+MAPQ 30:  1,585 reads (1.2%)
+MAPQ 29:      2 reads (0.0%)
+MAPQ 28:     17 reads (0.0%)
+MAPQ 27:    141 reads (0.1%)
+MAPQ 26:      8 reads (0.0%)
+MAPQ 25:      3 reads (0.0%)
+MAPQ 24:    588 reads (0.5%)
+MAPQ 23:      3 reads (0.0%)
+MAPQ 22:      4 reads (0.0%)
+MAPQ 21:    211 reads (0.2%)
+MAPQ 19:      5 reads (0.0%)
+MAPQ 18:    271 reads (0.2%)
+MAPQ 17:      2 reads (0.0%)
+MAPQ 16:     11 reads (0.0%)
+MAPQ 15:     16 reads (0.0%)
+MAPQ 12:    171 reads (0.1%)
+MAPQ 11:      6 reads (0.0%)
+MAPQ 10:     72 reads (0.1%)
+MAPQ  9:     15 reads (0.0%)
+MAPQ  6:     27 reads (0.0%)
+MAPQ  5:     15 reads (0.0%)
+MAPQ  3:      7 reads (0.0%)
+MAPQ  0:     14 reads (0.0%)
+
+============================================================
+Genome Position Distribution (1kb bins)
+============================================================
+    0-1,000bp:  2,899 reads
+1,000-2,000bp:    310 reads
+2,000-3,000bp:  4,525 reads
+3,000-4,000bp:  1,471 reads
+4,000-5,000bp:    411 reads
+5,000-6,000bp: 75,439 reads
+6,000-7,000bp:    689 reads
+7,000-8,000bp:  2,692 reads
+8,000-9,000bp:  3,432 reads
+9,000-10,000bp:    409 reads
+10,000-11,000bp:  1,130 reads
+11,000-12,000bp: 19,108 reads
+12,000-13,000bp:    123 reads
+13,000-14,000bp:    730 reads
+14,000-15,000bp:    714 reads
+15,000-16,000bp:    130 reads
+16,000-17,000bp:    363 reads
+17,000-18,000bp:     82 reads
+18,000-19,000bp:    302 reads
+19,000-20,000bp:  2,360 reads
+
+============================================================
+Top 10 CIGAR Patterns
+============================================================
+26M225S             : 39,929 reads
+46S26M179S          : 26,342 reads
+25M226S             :  6,592 reads
+221S30M             :  3,617 reads
+47S26M178S          :  2,685 reads
+15S30M206S          :  2,658 reads
+27M224S             :  2,491 reads
+28M223S             :  2,216 reads
+207S25M19S          :  2,050 reads
+30M221S             :  1,784 reads
+
+============================================================
+Sequence Content Analysis
+============================================================
+Illumina_adapter: 60787 sequences (47.2%)
+Poly-A: 34 sequences (0.0%)
+Poly-T: 10 sequences (0.0%)
+Poly-G: 24225 sequences (18.8%)
+Poly-C: 25246 sequences (19.6%)
+
+Poly-G or Poly-C: 49470 sequences (38.4%)
+GC content: 60.5%
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** 
+python3 analyze_short_alignments.py Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_mappings.nonsupplemental.sam 19 30 > Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_short_alignment_report.txt
+
+============================================================
+SUMMARY
+============================================================
+Total reads processed: 440,638
+Reads with 19-30bp mapped: 123,932 (28.13%)
+
+============================================================
+MAPQ Distribution
+============================================================
+MAPQ 60: 55,162 reads (44.5%)
+MAPQ 59:      6 reads (0.0%)
+MAPQ 58:    979 reads (0.8%)
+MAPQ 57:  6,187 reads (5.0%)
+MAPQ 56:      8 reads (0.0%)
+MAPQ 54:  5,285 reads (4.3%)
+MAPQ 53:      7 reads (0.0%)
+MAPQ 52:    303 reads (0.2%)
+MAPQ 51:  2,983 reads (2.4%)
+MAPQ 50:     33 reads (0.0%)
+MAPQ 49:      3 reads (0.0%)
+MAPQ 48: 13,105 reads (10.6%)
+MAPQ 47:      9 reads (0.0%)
+MAPQ 46:    185 reads (0.1%)
+MAPQ 45:  3,967 reads (3.2%)
+MAPQ 44:      1 reads (0.0%)
+MAPQ 43:     12 reads (0.0%)
+MAPQ 42: 14,045 reads (11.3%)
+MAPQ 41:     10 reads (0.0%)
+MAPQ 40:    122 reads (0.1%)
+MAPQ 39:    448 reads (0.4%)
+MAPQ 38:      2 reads (0.0%)
+MAPQ 37:      2 reads (0.0%)
+MAPQ 36: 13,633 reads (11.0%)
+MAPQ 35:     20 reads (0.0%)
+MAPQ 34:      1 reads (0.0%)
+MAPQ 33:    472 reads (0.4%)
+MAPQ 32:     41 reads (0.0%)
+MAPQ 31:      1 reads (0.0%)
+MAPQ 30:  4,505 reads (3.6%)
+MAPQ 29:      5 reads (0.0%)
+MAPQ 28:      3 reads (0.0%)
+MAPQ 27:    342 reads (0.3%)
+MAPQ 26:     23 reads (0.0%)
+MAPQ 25:      2 reads (0.0%)
+MAPQ 24:  1,051 reads (0.8%)
+MAPQ 23:     12 reads (0.0%)
+MAPQ 22:      1 reads (0.0%)
+MAPQ 21:    122 reads (0.1%)
+MAPQ 20:      5 reads (0.0%)
+MAPQ 19:      8 reads (0.0%)
+MAPQ 18:    369 reads (0.3%)
+MAPQ 17:      8 reads (0.0%)
+MAPQ 16:      4 reads (0.0%)
+MAPQ 15:    215 reads (0.2%)
+MAPQ 13:      1 reads (0.0%)
+MAPQ 12:     83 reads (0.1%)
+MAPQ 11:     10 reads (0.0%)
+MAPQ 10:      7 reads (0.0%)
+MAPQ  9:      7 reads (0.0%)
+MAPQ  7:      1 reads (0.0%)
+MAPQ  6:     31 reads (0.0%)
+MAPQ  5:     67 reads (0.1%)
+MAPQ  3:      9 reads (0.0%)
+MAPQ  0:      9 reads (0.0%)
+
+============================================================
+Genome Position Distribution (1kb bins)
+============================================================
+    0-1,000bp:  4,956 reads
+1,000-2,000bp:    653 reads
+2,000-3,000bp:  8,052 reads
+3,000-4,000bp:  3,394 reads
+4,000-5,000bp:    996 reads
+5,000-6,000bp: 19,048 reads
+6,000-7,000bp:  2,457 reads
+7,000-8,000bp:  6,459 reads
+8,000-9,000bp:  1,379 reads
+9,000-10,000bp:  1,754 reads
+10,000-11,000bp:  3,000 reads
+11,000-12,000bp: 25,854 reads
+12,000-13,000bp:    316 reads
+13,000-14,000bp:  1,166 reads
+14,000-15,000bp:  8,588 reads
+15,000-16,000bp:  1,036 reads
+16,000-17,000bp:  1,899 reads
+17,000-18,000bp:    207 reads
+18,000-19,000bp:  1,020 reads
+19,000-20,000bp:  5,472 reads
+
+============================================================
+Top 10 CIGAR Patterns
+============================================================
+26M225S             : 11,230 reads
+25M226S             : 10,016 reads
+221S30M             :  9,930 reads
+27M224S             :  5,915 reads
+30M221S             :  4,717 reads
+46S26M179S          :  4,465 reads
+15S30M206S          :  4,098 reads
+204S27M20S          :  3,202 reads
+224S27M             :  2,972 reads
+160S30M61S          :  2,842 reads
+
+============================================================
+Sequence Content Analysis
+============================================================
+Illumina_adapter: 59470 sequences (48.0%)
+Poly-A: 326 sequences (0.3%)
+Poly-T: 222 sequences (0.2%)
+Poly-G: 47187 sequences (38.1%)
+Poly-C: 48416 sequences (39.1%)
+
+Poly-G or Poly-C: 95600 sequences (77.1%)
+GC content: 67.0%
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** 
+python3 analyze_short_alignments.py Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_mappings.nonsupplemental.sam 19 30 > Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_short_alignment_report.txt
+
+============================================================
+SUMMARY
+============================================================
+Total reads processed: 406,932
+Reads with 19-30bp mapped: 121,127 (29.77%)
+
+============================================================
+MAPQ Distribution
+============================================================
+MAPQ 60: 45,747 reads (37.8%)
+MAPQ 59:      9 reads (0.0%)
+MAPQ 58:    496 reads (0.4%)
+MAPQ 57:  2,440 reads (2.0%)
+MAPQ 56:     12 reads (0.0%)
+MAPQ 55:      2 reads (0.0%)
+MAPQ 54:  3,042 reads (2.5%)
+MAPQ 53:      4 reads (0.0%)
+MAPQ 52:    306 reads (0.3%)
+MAPQ 51:  1,666 reads (1.4%)
+MAPQ 50:    331 reads (0.3%)
+MAPQ 48:  6,727 reads (5.6%)
+MAPQ 47:     14 reads (0.0%)
+MAPQ 46:    454 reads (0.4%)
+MAPQ 45:  1,578 reads (1.3%)
+MAPQ 44:      3 reads (0.0%)
+MAPQ 43:      4 reads (0.0%)
+MAPQ 42: 45,122 reads (37.3%)
+MAPQ 41:     12 reads (0.0%)
+MAPQ 40:    866 reads (0.7%)
+MAPQ 39:    336 reads (0.3%)
+MAPQ 38:      2 reads (0.0%)
+MAPQ 37:      1 reads (0.0%)
+MAPQ 36:  7,914 reads (6.5%)
+MAPQ 35:     21 reads (0.0%)
+MAPQ 33:    142 reads (0.1%)
+MAPQ 32:     36 reads (0.0%)
+MAPQ 30:  1,983 reads (1.6%)
+MAPQ 29:     14 reads (0.0%)
+MAPQ 27:    417 reads (0.3%)
+MAPQ 26:     11 reads (0.0%)
+MAPQ 25:      2 reads (0.0%)
+MAPQ 24:    458 reads (0.4%)
+MAPQ 23:      8 reads (0.0%)
+MAPQ 22:      2 reads (0.0%)
+MAPQ 21:     94 reads (0.1%)
+MAPQ 19:      6 reads (0.0%)
+MAPQ 18:    384 reads (0.3%)
+MAPQ 17:      1 reads (0.0%)
+MAPQ 16:     13 reads (0.0%)
+MAPQ 15:     39 reads (0.0%)
+MAPQ 12:    138 reads (0.1%)
+MAPQ 11:      4 reads (0.0%)
+MAPQ 10:     83 reads (0.1%)
+MAPQ  9:      9 reads (0.0%)
+MAPQ  7:      1 reads (0.0%)
+MAPQ  6:     89 reads (0.1%)
+MAPQ  5:     43 reads (0.0%)
+MAPQ  3:      3 reads (0.0%)
+MAPQ  0:     38 reads (0.0%)
+
+============================================================
+Genome Position Distribution (1kb bins)
+============================================================
+    0-1,000bp:  1,692 reads
+1,000-2,000bp:    312 reads
+2,000-3,000bp:  3,911 reads
+3,000-4,000bp:  1,372 reads
+4,000-5,000bp:    784 reads
+5,000-6,000bp: 58,541 reads
+6,000-7,000bp:    946 reads
+7,000-8,000bp:  5,676 reads
+8,000-9,000bp:    705 reads
+9,000-10,000bp:  1,228 reads
+10,000-11,000bp:  1,840 reads
+11,000-12,000bp: 22,388 reads
+12,000-13,000bp:    496 reads
+13,000-14,000bp:    492 reads
+14,000-15,000bp:    662 reads
+15,000-16,000bp:    553 reads
+16,000-17,000bp:  1,094 reads
+17,000-18,000bp:     80 reads
+18,000-19,000bp:    253 reads
+19,000-20,000bp:  3,078 reads
+
+============================================================
+Top 10 CIGAR Patterns
+============================================================
+26M225S             : 32,146 reads
+25M226S             :  7,055 reads
+46S26M179S          :  5,236 reads
+221S30M             :  4,666 reads
+127S26M98S          :  3,720 reads
+30M221S             :  3,171 reads
+43S26M182S          :  2,676 reads
+27M224S             :  2,414 reads
+52S26M173S          :  2,265 reads
+121S26M104S         :  2,163 reads
+
+============================================================
+Sequence Content Analysis
+============================================================
+Illumina_adapter: 53326 sequences (44.0%)
+Poly-A: 29 sequences (0.0%)
+Poly-T: 18 sequences (0.0%)
+Poly-G: 36452 sequences (30.1%)
+Poly-C: 37705 sequences (31.1%)
+
+Poly-G or Poly-C: 74155 sequences (61.2%)
+GC content: 62.4%
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** 
+python3 analyze_short_alignments.py Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental.sam 19 30 > Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_short_alignment_report.txt
+
+============================================================
+SUMMARY
+============================================================
+Total reads processed: 30,892
+Reads with 19-30bp mapped: 6,196 (20.06%)
+
+============================================================
+MAPQ Distribution
+============================================================
+MAPQ 60:  4,581 reads (73.9%)
+MAPQ 58:     53 reads (0.9%)
+MAPQ 57:    125 reads (2.0%)
+MAPQ 56:      2 reads (0.0%)
+MAPQ 54:     74 reads (1.2%)
+MAPQ 52:     55 reads (0.9%)
+MAPQ 51:     42 reads (0.7%)
+MAPQ 50:      6 reads (0.1%)
+MAPQ 49:      1 reads (0.0%)
+MAPQ 48:    379 reads (6.1%)
+MAPQ 47:      2 reads (0.0%)
+MAPQ 46:     52 reads (0.8%)
+MAPQ 45:     37 reads (0.6%)
+MAPQ 44:      1 reads (0.0%)
+MAPQ 43:      5 reads (0.1%)
+MAPQ 42:    124 reads (2.0%)
+MAPQ 40:     44 reads (0.7%)
+MAPQ 39:     14 reads (0.2%)
+MAPQ 37:      1 reads (0.0%)
+MAPQ 36:    301 reads (4.9%)
+MAPQ 35:      1 reads (0.0%)
+MAPQ 33:     35 reads (0.6%)
+MAPQ 31:      1 reads (0.0%)
+MAPQ 30:     92 reads (1.5%)
+MAPQ 27:     17 reads (0.3%)
+MAPQ 26:      4 reads (0.1%)
+MAPQ 24:     29 reads (0.5%)
+MAPQ 23:      3 reads (0.0%)
+MAPQ 21:     14 reads (0.2%)
+MAPQ 18:      3 reads (0.0%)
+MAPQ 15:     23 reads (0.4%)
+MAPQ 13:      1 reads (0.0%)
+MAPQ 12:     10 reads (0.2%)
+MAPQ  9:      8 reads (0.1%)
+MAPQ  7:      2 reads (0.0%)
+MAPQ  6:      8 reads (0.1%)
+MAPQ  5:      5 reads (0.1%)
+MAPQ  3:     14 reads (0.2%)
+MAPQ  0:     27 reads (0.4%)
+
+============================================================
+Genome Position Distribution (1kb bins)
+============================================================
+    0-1,000bp:    878 reads
+1,000-2,000bp:     40 reads
+2,000-3,000bp:    454 reads
+3,000-4,000bp:    104 reads
+4,000-5,000bp:     58 reads
+5,000-6,000bp:     82 reads
+6,000-7,000bp:     69 reads
+7,000-8,000bp:    820 reads
+8,000-9,000bp:    160 reads
+9,000-10,000bp:     26 reads
+10,000-11,000bp:     86 reads
+11,000-12,000bp:    892 reads
+12,000-13,000bp:     16 reads
+13,000-14,000bp:     32 reads
+14,000-15,000bp:     70 reads
+15,000-16,000bp:     38 reads
+16,000-17,000bp:     72 reads
+17,000-18,000bp:      4 reads
+18,000-19,000bp:      4 reads
+19,000-20,000bp:    697 reads
+
+============================================================
+Top 10 CIGAR Patterns
+============================================================
+25M226S             :    629 reads
+221S30M             :    477 reads
+30M221S             :    406 reads
+15S30M206S          :    390 reads
+211S25M15S          :    378 reads
+29M222S             :    336 reads
+222S29M             :    269 reads
+202S30M19S          :    163 reads
+224S27M             :    159 reads
+27M224S             :    156 reads
+
+============================================================
+Sequence Content Analysis
+============================================================
+Illumina_adapter: 2823 sequences (45.6%)
+Poly-A: 416 sequences (6.7%)
+Poly-T: 167 sequences (2.7%)
+Poly-G: 2841 sequences (45.9%)
+Poly-C: 2960 sequences (47.8%)
+
+Poly-G or Poly-C: 5790 sequences (93.4%)
+GC content: 69.8%
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** 
+python3 analyze_short_alignments.py Handley_A2688_54319_Wilen_7_FS12_mappings.nonsupplemental.sam 19 30 > Handley_A2688_54319_Wilen_7_FS12_short_alignment_report.txt
+
+============================================================
+SUMMARY
+============================================================
+Total reads processed: 65,136
+Reads with 19-30bp mapped: 30,254 (46.45%)
+
+============================================================
+MAPQ Distribution
+============================================================
+MAPQ 60:  8,489 reads (28.1%)
+MAPQ 59:      5 reads (0.0%)
+MAPQ 58:     72 reads (0.2%)
+MAPQ 57:    735 reads (2.4%)
+MAPQ 56:      4 reads (0.0%)
+MAPQ 55:      4 reads (0.0%)
+MAPQ 54:    470 reads (1.6%)
+MAPQ 53:      1 reads (0.0%)
+MAPQ 52:     40 reads (0.1%)
+MAPQ 51:    179 reads (0.6%)
+MAPQ 50:      8 reads (0.0%)
+MAPQ 48:  1,796 reads (5.9%)
+MAPQ 46:     60 reads (0.2%)
+MAPQ 45: 13,977 reads (46.2%)
+MAPQ 44:      1 reads (0.0%)
+MAPQ 43:      5 reads (0.0%)
+MAPQ 42:    736 reads (2.4%)
+MAPQ 41:      1 reads (0.0%)
+MAPQ 40:     30 reads (0.1%)
+MAPQ 39:    147 reads (0.5%)
+MAPQ 38:      1 reads (0.0%)
+MAPQ 36:  1,617 reads (5.3%)
+MAPQ 35:      3 reads (0.0%)
+MAPQ 33:    191 reads (0.6%)
+MAPQ 32:      5 reads (0.0%)
+MAPQ 30:    783 reads (2.6%)
+MAPQ 28:      6 reads (0.0%)
+MAPQ 27:     66 reads (0.2%)
+MAPQ 26:      5 reads (0.0%)
+MAPQ 24:    614 reads (2.0%)
+MAPQ 23:     64 reads (0.2%)
+MAPQ 21:     11 reads (0.0%)
+MAPQ 18:     41 reads (0.1%)
+MAPQ 16:     24 reads (0.1%)
+MAPQ 15:     33 reads (0.1%)
+MAPQ 12:     10 reads (0.0%)
+MAPQ 11:      2 reads (0.0%)
+MAPQ  7:      1 reads (0.0%)
+MAPQ  6:      4 reads (0.0%)
+MAPQ  5:      2 reads (0.0%)
+MAPQ  3:      3 reads (0.0%)
+MAPQ  0:      8 reads (0.0%)
+
+============================================================
+Genome Position Distribution (1kb bins)
+============================================================
+    0-1,000bp:    534 reads
+1,000-2,000bp:    107 reads
+2,000-3,000bp:  1,263 reads
+3,000-4,000bp:  1,418 reads
+4,000-5,000bp:    103 reads
+5,000-6,000bp:    392 reads
+6,000-7,000bp:     95 reads
+7,000-8,000bp:  1,311 reads
+8,000-9,000bp:    241 reads
+9,000-10,000bp:     83 reads
+10,000-11,000bp:    666 reads
+11,000-12,000bp: 17,927 reads
+12,000-13,000bp:     30 reads
+13,000-14,000bp:     98 reads
+14,000-15,000bp:    337 reads
+15,000-16,000bp:    104 reads
+16,000-17,000bp:    273 reads
+17,000-18,000bp:     28 reads
+18,000-19,000bp:     72 reads
+19,000-20,000bp:  1,297 reads
+
+============================================================
+Top 10 CIGAR Patterns
+============================================================
+26M225S             :  7,544 reads
+142S26M83S          :  6,972 reads
+25M226S             :  1,266 reads
+221S30M             :  1,193 reads
+30M221S             :    939 reads
+15S30M206S          :    837 reads
+224S27M             :    647 reads
+228S23M             :    617 reads
+222S29M             :    556 reads
+27M224S             :    555 reads
+
+============================================================
+Sequence Content Analysis
+============================================================
+Illumina_adapter: 14437 sequences (47.7%)
+Poly-A: 110 sequences (0.4%)
+Poly-T: 31 sequences (0.1%)
+Poly-G: 14542 sequences (48.1%)
+Poly-C: 15064 sequences (49.8%)
+
+Poly-G or Poly-C: 29606 sequences (97.9%)
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** 
+python3 analyze_short_alignments.py Handley_A2689_54318_Wilen_8_FS12_mappings.nonsupplemental.sam 19 30 > Handley_A2689_54318_Wilen_8_FS12_short_alignment_report.txt
+
+============================================================
+SUMMARY
+============================================================
+Total reads processed: 69,436
+Reads with 19-30bp mapped: 24,517 (35.31%)
+
+============================================================
+MAPQ Distribution
+============================================================
+MAPQ 60: 17,747 reads (72.4%)
+MAPQ 59:      2 reads (0.0%)
+MAPQ 58:    198 reads (0.8%)
+MAPQ 57:     65 reads (0.3%)
+MAPQ 54:    514 reads (2.1%)
+MAPQ 53:      1 reads (0.0%)
+MAPQ 52:    168 reads (0.7%)
+MAPQ 51:    213 reads (0.9%)
+MAPQ 50:      2 reads (0.0%)
+MAPQ 49:      1 reads (0.0%)
+MAPQ 48:  1,817 reads (7.4%)
+MAPQ 47:      2 reads (0.0%)
+MAPQ 46:     47 reads (0.2%)
+MAPQ 45:     75 reads (0.3%)
+MAPQ 44:      1 reads (0.0%)
+MAPQ 43:      6 reads (0.0%)
+MAPQ 42:    793 reads (3.2%)
+MAPQ 41:      1 reads (0.0%)
+MAPQ 40:      4 reads (0.0%)
+MAPQ 39:     65 reads (0.3%)
+MAPQ 38:      1 reads (0.0%)
+MAPQ 37:      1 reads (0.0%)
+MAPQ 36:  2,276 reads (9.3%)
+MAPQ 35:      4 reads (0.0%)
+MAPQ 33:     63 reads (0.3%)
+MAPQ 32:     17 reads (0.1%)
+MAPQ 30:    228 reads (0.9%)
+MAPQ 27:     18 reads (0.1%)
+MAPQ 26:      3 reads (0.0%)
+MAPQ 24:     44 reads (0.2%)
+MAPQ 21:     26 reads (0.1%)
+MAPQ 20:      1 reads (0.0%)
+MAPQ 19:      6 reads (0.0%)
+MAPQ 18:     11 reads (0.0%)
+MAPQ 15:     61 reads (0.2%)
+MAPQ 12:     13 reads (0.1%)
+MAPQ 11:      1 reads (0.0%)
+MAPQ  9:      2 reads (0.0%)
+MAPQ  6:      6 reads (0.0%)
+MAPQ  5:      4 reads (0.0%)
+MAPQ  3:      4 reads (0.0%)
+MAPQ  0:      5 reads (0.0%)
+
+============================================================
+Genome Position Distribution (1kb bins)
+============================================================
+    0-1,000bp:  2,247 reads
+1,000-2,000bp:    138 reads
+2,000-3,000bp:  2,294 reads
+3,000-4,000bp:    381 reads
+4,000-5,000bp:    165 reads
+5,000-6,000bp:    567 reads
+6,000-7,000bp:    335 reads
+7,000-8,000bp:  3,119 reads
+8,000-9,000bp:    681 reads
+9,000-10,000bp:     86 reads
+10,000-11,000bp:    265 reads
+11,000-12,000bp:  5,082 reads
+12,000-13,000bp:     38 reads
+13,000-14,000bp:     63 reads
+14,000-15,000bp:    150 reads
+15,000-16,000bp:    436 reads
+16,000-17,000bp:    424 reads
+17,000-18,000bp:     36 reads
+18,000-19,000bp:     24 reads
+19,000-20,000bp:  2,365 reads
+
+============================================================
+Top 10 CIGAR Patterns
+============================================================
+221S30M             :  2,630 reads
+25M226S             :  2,435 reads
+15S30M206S          :  2,091 reads
+30M221S             :  1,676 reads
+222S29M             :  1,169 reads
+207S25M19S          :  1,100 reads
+211S25M15S          :  1,039 reads
+29M222S             :  1,026 reads
+224S27M             :    993 reads
+202S30M19S          :    784 reads
+
+============================================================
+Sequence Content Analysis
+============================================================
+Illumina_adapter: 11623 sequences (47.4%)
+Poly-A: 161 sequences (0.7%)
+Poly-T: 44 sequences (0.2%)
+Poly-G: 11553 sequences (47.1%)
+Poly-C: 12338 sequences (50.3%)
+
+Poly-G or Poly-C: 23888 sequences (97.4%)
+GC content: 71.3%
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** 
+python3 analyze_short_alignments.py Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam 19 30 > Handley_A2690_54317_Wilen_9_short_alignment_report.txt
+
+============================================================
+SUMMARY
+============================================================
+Total reads processed: 2,742,850
+Reads with 19-30bp mapped: 1,671,577 (60.94%)
+
+============================================================
+MAPQ Distribution
+============================================================
+MAPQ 60: 474,266 reads (28.4%)
+MAPQ 59:     20 reads (0.0%)
+MAPQ 58:  4,663 reads (0.3%)
+MAPQ 57: 26,786 reads (1.6%)
+MAPQ 56:  1,321 reads (0.1%)
+MAPQ 55:    142 reads (0.0%)
+MAPQ 54: 11,156 reads (0.7%)
+MAPQ 53:     45 reads (0.0%)
+MAPQ 52:  3,696 reads (0.2%)
+MAPQ 51: 10,980 reads (0.7%)
+MAPQ 50: 17,422 reads (1.0%)
+MAPQ 49:      5 reads (0.0%)
+MAPQ 48: 47,176 reads (2.8%)
+MAPQ 47:     35 reads (0.0%)
+MAPQ 46:  1,272 reads (0.1%)
+MAPQ 45: 13,746 reads (0.8%)
+MAPQ 44:      7 reads (0.0%)
+MAPQ 43:     12 reads (0.0%)
+MAPQ 42: 890,742 reads (53.3%)
+MAPQ 41: 29,635 reads (1.8%)
+MAPQ 40: 20,438 reads (1.2%)
+MAPQ 39:  8,244 reads (0.5%)
+MAPQ 38:     50 reads (0.0%)
+MAPQ 36: 70,393 reads (4.2%)
+MAPQ 35:  3,928 reads (0.2%)
+MAPQ 34:    328 reads (0.0%)
+MAPQ 33:  1,372 reads (0.1%)
+MAPQ 32:    270 reads (0.0%)
+MAPQ 31:      2 reads (0.0%)
+MAPQ 30: 15,214 reads (0.9%)
+MAPQ 29:     54 reads (0.0%)
+MAPQ 28:    217 reads (0.0%)
+MAPQ 27:  1,660 reads (0.1%)
+MAPQ 26:    123 reads (0.0%)
+MAPQ 25:      5 reads (0.0%)
+MAPQ 24:  4,058 reads (0.2%)
+MAPQ 23:     81 reads (0.0%)
+MAPQ 22:    226 reads (0.0%)
+MAPQ 21:    385 reads (0.0%)
+MAPQ 20:     14 reads (0.0%)
+MAPQ 19:     51 reads (0.0%)
+MAPQ 18:  1,401 reads (0.1%)
+MAPQ 17:      5 reads (0.0%)
+MAPQ 16:    219 reads (0.0%)
+MAPQ 15:  4,071 reads (0.2%)
+MAPQ 12:    513 reads (0.0%)
+MAPQ 11:      8 reads (0.0%)
+MAPQ 10:  4,211 reads (0.3%)
+MAPQ  9:    204 reads (0.0%)
+MAPQ  7:      1 reads (0.0%)
+MAPQ  6:    283 reads (0.0%)
+MAPQ  5:    225 reads (0.0%)
+MAPQ  3:     46 reads (0.0%)
+MAPQ  0:    150 reads (0.0%)
+
+============================================================
+Genome Position Distribution (1kb bins)
+============================================================
+    0-1,000bp: 30,517 reads
+1,000-2,000bp:  2,931 reads
+2,000-3,000bp: 43,604 reads
+3,000-4,000bp:  4,391 reads
+4,000-5,000bp:  5,482 reads
+5,000-6,000bp: 708,185 reads
+6,000-7,000bp:  4,957 reads
+7,000-8,000bp: 37,338 reads
+8,000-9,000bp:  2,933 reads
+9,000-10,000bp:  2,601 reads
+10,000-11,000bp:  6,321 reads
+11,000-12,000bp: 702,462 reads
+12,000-13,000bp:    516 reads
+13,000-14,000bp:  2,190 reads
+14,000-15,000bp:  7,067 reads
+15,000-16,000bp:  1,193 reads
+16,000-17,000bp:  3,413 reads
+17,000-18,000bp:    264 reads
+18,000-19,000bp:    971 reads
+19,000-20,000bp: 28,252 reads
+
+============================================================
+Top 10 CIGAR Patterns
+============================================================
+26M225S             : 1,012,635 reads
+25M226S             : 71,674 reads
+27M224S             : 55,157 reads
+221S30M             : 34,184 reads
+15S30M206S          : 25,849 reads
+28M223S             : 24,611 reads
+69S26M156S          : 23,842 reads
+207S25M19S          : 23,335 reads
+138S26M87S          : 20,502 reads
+29M222S             : 18,766 reads
+
+============================================================
+Sequence Content Analysis
+============================================================
+Illumina_adapter: 294830 sequences (17.6%)
+Poly-A: 232 sequences (0.0%)
+Poly-T: 64 sequences (0.0%)
+Poly-G: 243975 sequences (14.6%)
+Poly-C: 245373 sequences (14.7%)
+
+Poly-G or Poly-C: 489213 sequences (29.3%)
+GC content: 61.5%
+
+
+Handley_A2682_54325_Wilen_1_5405_RECTUM
+Total reads processed: 245,704
+Reads with 19-30bp mapped: 124,611 (50.72%)
+Poly-G: 19913 sequences (16.0%)
+
+Handley_A2683_54324_Wilen_2_5374
+Total reads processed: 721,210
+Reads with 19-30bp mapped: 422,124 (58.53%)
+Poly-G: 140037 sequences (33.2%)
+
+Handley_A2684_54323_Wilen_3_5897_RECTUM
+Total reads processed: 314,130
+Reads with 19-30bp mapped: 128,829 (41.01%)
+Poly-G: 24225 sequences (18.8%)
+
+Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM
+Total reads processed: 440,638
+Reads with 19-30bp mapped: 123,932 (28.13%)
+Poly-G: 47187 sequences (38.1%)
+
+Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM
+Total reads processed: 406,932
+Reads with 19-30bp mapped: 121,127 (29.77%)
+Poly-G: 36452 sequences (30.1%)
+
+Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM
+Total reads processed: 30,892
+Reads with 19-30bp mapped: 6,196 (20.06%)
+Poly-G: 2841 sequences (45.9%)
+
+Handley_A2688_54319_Wilen_7_FS12
+Total reads processed: 65,136
+Reads with 19-30bp mapped: 30,254 (46.45%)
+Poly-G: 14542 sequences (48.1%)
+
+Handley_A2689_54318_Wilen_8_FS12:
+Total reads processed: 69,436
+Reads with 19-30bp mapped: 24,517 (35.31%)
+Poly-G: 11553 sequences (47.1%)
+
+Handley_A2690_54317_Wilen_9:
+Total reads processed: 2,742,850
+Reads with 19-30bp mapped: 1,671,577 (60.94%)
+Poly-G: 243975 sequences (14.6%)
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** 
+
+ - Finally, let's think about whether we should require a CONTIGUOUS match, with minimal insertions/deletions - what parameters do we currently have set?
+Contiguous Matching - BWA-MEM Parameters
+
+  Current settings ALLOW gaps:
+  - -O 6 (gap open) and -E 1 (gap extension) are permissive
+  - Reads with insertions/deletions are accepted
+
+
+***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
+Additional questions from Scott:
+1.  Extract assemble the contigs from the mapped reads in Handley_A2690_54317_Wilen_9_mappings.nonsupplemental_min150.sam, and blast them against nt to show that they are SARS, not human or bacterial:
+source /ref/sahlab/software/miniforge3/bin/activate
+conda activate viral_genomics
+
+python3 extract_consensus_contigs.py Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental_min150.sam \
+      Wilen_1_min150_contigs.fasta \
+      --min-depth 1 \
+      --min-contig-length 150
+
+NCBI Blastn:
+contig_1_pos27197-27604_len408
+Description	Scientific Name	Max Score	Total Score	Query Cover	E value	Per. Ident	Acc. Len	Accession
+Severe acute respiratory syndrome coronavirus 2 genome assembly, chromosome: 1	Severe acute respiratory syndrome coronavirus 2	754	754	100%	0.0	100.00%	29873	OY788531.1
+ALL top 100 = 100% Query Cover AND 100% Ident COVID
+
+python3 extract_consensus_contigs.py Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental_min150.sam \
+      Wilen_3_min150_contigs.fasta \
+      --min-depth 1 \
+      --min-contig-length 150
+
+NCBI Blastn:
+contig_1_pos26591-27013_len423
+Description	Scientific Name	Max Score	Total Score	Query Cover	E value	Per. Ident	Acc. Len	Accession
+Severe acute respiratory syndrome coronavirus 2 genome assembly, chromosome: 1	Severe acute respiratory syndrome coronavirus 2	782	782	100%	0.0	100.00%	29876	OX194316.1
+ALL top 100 = 100% Query Cover AND 100% Ident COVID
+
+python3 extract_consensus_contigs.py Handley_A2690_54317_Wilen_9_mappings.nonsupplemental_min150.sam \
+      Wilen_9_min150_contigs.fasta \
+      --min-depth 1 \
+      --min-contig-length 150
+
+NCBI Blastn:
+contig_1_pos15017-15416_len400
+Description	Scientific Name	Max Score	Total Score	Query Cover	E value	Per. Ident	Acc. Len	Accession
+Severe acute respiratory syndrome coronavirus 2 genome assembly, chromosome: 1	Severe acute respiratory syndrome coronavirus 2	739	739	100%	0.0	100.00%	29876	OX194316.1
+ALL top 100 = 100% Query Cover AND 100% Ident COVID
+
+contig_2_pos27201-27603_len403
+Description	Scientific Name	Max Score	Total Score	Query Cover	E value	Per. Ident	Acc. Len	Accession
+Severe acute respiratory syndrome coronavirus 2 isolate SARS-CoV-2/human/USA/VA-CAV_VAS3N_00020743_01/2024 ORF1ab polyprotein (ORF1ab), ORF1a polyprotein (ORF1ab), surface glycoprotein (S), and ORF3a protein (ORF3a) genes, complete cds; envelope protein (E) and membrane glycoprotein (M) genes, partial cds; ORF6 protein (ORF6), ORF7a protein (ORF7a), and ORF7b (ORF7b) genes, complete cds; ORF8 gene, complete sequence; and nucleocapsid phosphoprotein (N) and ORF10 protein (ORF10) genes, complete cds	Severe acute respiratory syndrome coronavirus 2	745	745	100%	0.0	100.00%	29747	PV452389.1
+99 top 100 = 100% Query Cover AND 100% Ident COVID; # 100 = 100% Query Cover AND 99.75% Ident
+
+rsync -avh htcf:/scratch/sahlab/kathie/willen_covid_hunt/*_min150_contigs.fasta .
+
+2.  Extract reads mapped to COVID per pipeline, then blast to nt and parse these top hits:
+2A.  Copy scripts to HTCF:
+  scp extract_reads_for_blast.py parse_blast_results.py blast_validation_workflow.sh \
+      htcf:/scratch/sahlab/kathie/willen_covid_hunt/
+
+2B.  Quick test to verify BLAST database works:
+  # Create a tiny test file with just 2 reads
+  head -4 Handley_A2690_54317_Wilen_9_mappings.final.sam > test_header.sam
+  grep -v "^@" Handley_A2690_54317_Wilen_9_mappings.final.sam | head -2 >> test_header.sam
+
+  # Run workflow on test
+  bash blast_validation_workflow.sh test_header.sam test_output 4
+
+2C.  Run the workflow:
+
+sbatch --job-name=wilen1_blast \
+         --output=wilen1_blast_%j.log \
+         --time=24:00:00 \
+         --mem=64G \
+         --cpus-per-task=16 \
+         --partition=general \
+         --wrap="bash blast_validation_workflow.sh Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental.sam Wilen_1_blast 16"
+
+Submitted batch job 33390789
+
+Poor quality:
+sbatch --job-name=wilen6_blast \
+         --output=wilen6_blast_%j.log \
+         --time=24:00:00 \
+         --mem=64G \
+         --cpus-per-task=16 \
+         --partition=general \
+         --wrap="bash blast_validation_workflow.sh Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental.sam Wilen_6_blast 16"
+
+Submitted batch job 33391326
+
+
+sbatch --job-name=wilen3_blast \
+         --output=wilen3_blast_%j.log \
+         --time=24:00:00 \
+         --mem=64G \
+         --cpus-per-task=16 \
+         --partition=general \
+         --wrap="bash blast_validation_workflow.sh Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental.sam Wilen_3_blast 16"
+
+Submitted batch job 33390787
+
+sbatch --job-name=wilen9_blast \
+         --output=wilen9_blast_%j.log \
+         --time=24:00:00 \
+         --mem=64G \
+         --cpus-per-task=16 \
+         --partition=general \
+         --wrap="bash blast_validation_workflow.sh Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam Wilen_9_blast 16"
+
+Submitted batch job 33390785
+
+Check job status:
+  squeue -u mihindu
+  tail -f blast_validation_*.log
+
+2D.  Test the same mapping with mmseqs:
+Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental.sam        Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental.sam
+Handley_A2683_54324_Wilen_2_5374_mappings.nonsupplemental.sam               Handley_A2688_54319_Wilen_7_FS12_mappings.nonsupplemental.sam
+Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental.sam        Handley_A2689_54318_Wilen_8_FS12_mappings.nonsupplemental.sam
+Handley_A2685_54322_Wilen_4_COVID_5323_RECTUM_mappings.nonsupplemental.sam  Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam
+Handley_A2686_54321_Wilen_5_LIINC_5104_RECTUM_mappings.nonsupplemental.sam
+
+2D1.  Find env with mmseqs:
+source /ref/sahlab/software/miniforge3/bin/activate
+
+for env in $(conda env list | awk '{print $1}' | grep -v "^#"); do
+      echo "Checking $env:"
+      conda list -n $env 2>/dev/null | grep mmseqs
+  done
+
+Checking mmseqs2_v15-6f452:
+# packages in environment at /ref/sahlab/software/miniforge3/envs/mmseqs2_v15-6f452:
+mmseqs2                   15.6f452        pl5321h6a68c12_3    bioconda
+
+Checking pharokka_env:
+mmseqs2
+
+Checking vRhyme:
+mmseqs2                   15.6f452        pl5321h6a68c12_2    bioconda
+Checking vcontct3:
+mmseqs2                   15.6f452        pl5321h6a68c12_2    bioconda
+
+source /ref/sahlab/software/anaconda3/bin/activate
+
+for env in $(conda env list | awk '{print $1}' | grep -v "^#"); do
+      echo "Checking $env:"
+      conda list -n $env 2>/dev/null | grep mmseqs
+  done
+
+Checking eggnog:
+mmseqs2                   13.45111        pl5321hf1761c0_2    bioconda
+
+Checking genomad:
+mmseqs2                   14.7e284        pl5321hf1761c0_0    bioconda
+
+Checking mmseqs:
+# packages in environment at /ref/sahlab/software/anaconda3/envs/mmseqs:
+mmseqs2                   12.113e3             h2d02072_2    bioconda
+
+conda activate /ref/sahlab/software/miniforge3/envs/mmseqs2_v15-6f452
+
+2D2.  Run:
+sbatch submit_mmseqs_validation.sh Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental.sam Wilen_1_mmseqs
+Submitted batch job 33391831
+
+sbatch submit_mmseqs_validation.sh Handley_A2684_54323_Wilen_3_5897_RECTUM_mappings.nonsupplemental.sam Wilen_3_mmseqs
+Submitted batch job 33391832
+
+
+sbatch submit_mmseqs_validation.sh Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental.sam Wilen_6_mmseqs
+Submitted batch job 33391763
+
+sbatch submit_mmseqs_validation.sh Handley_A2690_54317_Wilen_9_mappings.nonsupplemental.sam Wilen_9_mmseqs
+Submitted batch job 33391830
+
+Could you help me to blast the sequences POST-IVAR primer trim to nt, and then parse the top hit (or hits if > 1 has 100% identity over 100% length) to garner the

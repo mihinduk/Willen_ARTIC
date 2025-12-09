@@ -1,0 +1,41 @@
+Processing: Handley_A2682_54325_Wilen_1_5405_RECTUM_mappings.nonsupplemental_min150.sam
+Genome length: 29,903 bp
+Min MAPQ: 30
+Coverage threshold: 50X
+
+Parsing SAM file...
+Total reads: 90,170
+Mapped reads (MAPQ ≥30): 90,170
+
+======================================================================
+COVERAGE SUMMARY
+======================================================================
+Total bases in genome: 29,903
+Bases with coverage > 0: 408 (1.36%)
+Bases with coverage ≥ 50X: 403 (1.35%)
+
+Mean depth: 756.21X
+Median depth: 0X
+Max depth: 90,013X
+
+======================================================================
+COVERAGE DISTRIBUTION
+======================================================================
+≥  1X:     408 bases (  1.36%)
+≥ 10X:     406 bases (  1.36%)
+≥ 20X:     404 bases (  1.35%)
+≥ 30X:     404 bases (  1.35%)
+≥ 50X:     403 bases (  1.35%)
+≥100X:     403 bases (  1.35%)
+≥200X:     403 bases (  1.35%)
+
+======================================================================
+COVERAGE GAPS (0X coverage)
+======================================================================
+Total gaps: 2
+
+Largest gaps (≥100bp):
+        1 -  27,196 (27,196 bp)
+   27,605 -  29,903 ( 2,299 bp)
+
+Total bases in gaps: 29,495 (98.64%)

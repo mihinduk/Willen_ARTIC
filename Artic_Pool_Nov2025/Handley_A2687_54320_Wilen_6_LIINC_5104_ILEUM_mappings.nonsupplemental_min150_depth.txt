@@ -1,0 +1,40 @@
+Processing: Handley_A2687_54320_Wilen_6_LIINC_5104_ILEUM_mappings.nonsupplemental_min150.sam
+Genome length: 29,903 bp
+Min MAPQ: 30
+Coverage threshold: 50X
+
+Parsing SAM file...
+Total reads: 0
+Mapped reads (MAPQ ≥30): 0
+
+======================================================================
+COVERAGE SUMMARY
+======================================================================
+Total bases in genome: 29,903
+Bases with coverage > 0: 0 (0.00%)
+Bases with coverage ≥ 50X: 0 (0.00%)
+
+Mean depth: 0.00X
+Median depth: 0X
+Max depth: 0X
+
+======================================================================
+COVERAGE DISTRIBUTION
+======================================================================
+≥  1X:       0 bases (  0.00%)
+≥ 10X:       0 bases (  0.00%)
+≥ 20X:       0 bases (  0.00%)
+≥ 30X:       0 bases (  0.00%)
+≥ 50X:       0 bases (  0.00%)
+≥100X:       0 bases (  0.00%)
+≥200X:       0 bases (  0.00%)
+
+======================================================================
+COVERAGE GAPS (0X coverage)
+======================================================================
+Total gaps: 1
+
+Largest gaps (≥100bp):
+        1 -  29,903 (29,903 bp)
+
+Total bases in gaps: 29,903 (100.00%)
