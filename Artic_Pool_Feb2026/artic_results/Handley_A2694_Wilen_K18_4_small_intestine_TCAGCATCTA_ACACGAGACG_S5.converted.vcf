@@ -1,0 +1,18 @@
+##fileformat=VCFv4.0
+##fileDate=20260224
+##source=lofreq call --force-overwrite --no-default-filter --call-indels -f ./artic_results/nCoV-2019.reference.fasta --no-default-filter -r NC_045512.2:1-934 -o /mnt/pathogen2/kathie/tmp/lofreq2_call_parallelm5mbm6ro/0.vcf.gz ./artic_results/Handley_A2694_Wilen_K18_4_small_intestine_TCAGCATCTA_ACACGAGACG_S5.lofreq.final.bam 
+##reference=./artic_results/nCoV-2019.reference.fasta
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Raw Depth">
+##INFO=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">
+##INFO=<ID=SB,Number=1,Type=Integer,Description="Phred-scaled strand bias at this position">
+##INFO=<ID=DP4,Number=4,Type=Integer,Description="Counts for ref-forward bases, ref-reverse, alt-forward and alt-reverse bases">
+##INFO=<ID=INDEL,Number=0,Type=Flag,Description="Indicates that the variant is an INDEL.">
+##INFO=<ID=CONSVAR,Number=0,Type=Flag,Description="Indicates that the variant is a consensus variant (as opposed to a low frequency variant).">
+##INFO=<ID=HRUN,Number=1,Type=Integer,Description="Homopolymer length to the right of report indel position">
+##FILTER=<ID=min_snvqual_20,Description="Minimum SNV Quality (Phred) 20">
+##FILTER=<ID=min_indelqual_20,Description="Minimum Indel Quality (Phred) 20">
+##FILTER=<ID=min_snvqual_20,Description="Minimum SNV Quality (Phred) 20">
+##FILTER=<ID=min_indelqual_20,Description="Minimum Indel Quality (Phred) 20">
+##FILTER=<ID=min_dp_75,Description="Minimum Coverage 75">
+##FILTER=<ID=sb_fdr,Description="Strand-Bias Multiple Testing Correction: fdr corr. pvalue > 0.001000">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
